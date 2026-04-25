@@ -4,353 +4,374 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>직육면체 부피 구하기 3D</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body {
-            font-family: 'Pretendard', sans-serif;
-        }
-        /* 캔버스 터치 액션 기본 동작 방지 (OrbitControls용) */
-        #canvas-container canvas {
-            touch-action: none;
-            outline: none;
-        }
-        /* 라디오 버튼 커스텀 색상 테마 적용 */
-        .radio-pink:checked { background-color: #f472b6; border-color: #f472b6; }
-        .radio-blue:checked { background-color: #3b82f6; border-color: #3b82f6; }
-        .radio-green:checked { background-color: #22c55e; border-color: #22c55e; }
+        body { font-family: 'Pretendard', sans-serif; }
+        #canvas-container canvas { touch-action: none; outline: none; }
     </style>
 </head>
 <body class="bg-slate-50 flex flex-col md:flex-row h-screen overflow-hidden text-gray-800">
 
     <!-- 좌측 컨트롤 패널 -->
-    <div class="w-full md:w-80 lg:w-96 bg-white shadow-xl p-6 flex flex-col z-10 overflow-y-auto shrink-0 border-b md:border-b-0 md:border-r border-gray-200">
+    <div class="w-full md:w-80 lg:w-[26rem] bg-white shadow-xl p-6 flex flex-col z-10 overflow-y-auto shrink-0 border-b md:border-b-0 md:border-r border-gray-200">
         <h1 class="text-xl font-extrabold text-gray-800 mb-1">직육면체 부피 구하기</h1>
-        <p class="text-xs text-gray-500 mb-5">상자 크기를 설정하고 쌓기나무를 채워보세요.</p>
+        <p class="text-xs text-gray-500 mb-4">상자 크기를 설정하고 단위 부피를 이해해 보세요.</p>
 
-        <!-- 상자 크기 설정 영역 -->
-        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-5">
-            <h2 class="text-sm font-bold text-gray-700 mb-3">📐 1. 상자 크기 설정</h2>
-            <div class="grid grid-cols-3 gap-2 mb-3">
-                <div>
-                    <label class="block text-[11px] font-bold text-pink-600 mb-1 text-center">가로</label>
-                    <input type="number" id="input-w" value="6" min="1" max="10" class="w-full border-2 border-pink-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-pink-500 focus:outline-none transition">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-blue-600 mb-1 text-center">세로</label>
-                    <input type="number" id="input-d" value="4" min="1" max="10" class="w-full border-2 border-blue-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-blue-500 focus:outline-none transition">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold text-green-600 mb-1 text-center">높이</label>
-                    <input type="number" id="input-h" value="5" min="1" max="10" class="w-full border-2 border-green-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-green-500 focus:outline-none transition">
-                </div>
-            </div>
-            <button id="btn-create" class="w-full bg-slate-800 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-slate-700 transition text-sm">
-                투명 상자 만들기
-            </button>
+        <!-- 모드 전환 (3가지 탭) - 잘림 현상 해결을 위해 flex-wrap 적용 -->
+        <div class="flex flex-wrap gap-1.5 mb-5">
+            <button id="mode-normal" class="flex-1 whitespace-nowrap bg-indigo-600 text-white font-bold py-2 px-2 rounded-lg text-xs shadow transition">기본 쌓기(cm³)</button>
+            <button id="mode-single" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition">단위 변환(조각)</button>
+            <button id="mode-meter" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition">1m³ 시각화</button>
         </div>
 
-        <!-- 쌓기 단위 옵션 영역 -->
-        <div class="mb-5">
+        <!-- ========================================== -->
+        <!-- 1. 기본 쌓기 모드 패널 -->
+        <!-- ========================================== -->
+        <div id="normal-controls" class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4">
+            <h2 class="text-sm font-bold text-gray-700 mb-3">📐 1. 상자 크기 설정 (정수)</h2>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-pink-600 mb-1 text-center">가로(cm)</label>
+                    <input type="number" id="input-w" value="6" min="1" max="100" class="w-full border-2 border-pink-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-pink-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-blue-600 mb-1 text-center">세로(cm)</label>
+                    <input type="number" id="input-d" value="4" min="1" max="100" class="w-full border-2 border-blue-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-blue-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-green-600 mb-1 text-center">높이(cm)</label>
+                    <input type="number" id="input-h" value="5" min="1" max="100" class="w-full border-2 border-green-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-green-500 focus:outline-none transition">
+                </div>
+            </div>
+            <button id="btn-create" class="w-full bg-slate-800 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-slate-700 transition text-sm mb-5">투명 상자 만들기</button>
+            
             <h2 class="text-sm font-bold text-gray-700 mb-2">🧱 2. 쌓기 옵션</h2>
-            <div class="space-y-1.5 bg-white border border-gray-200 rounded-xl p-3">
-                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition border border-transparent hover:border-slate-200">
+            <div class="space-y-1 bg-white border border-gray-200 rounded-xl p-3 mb-4">
+                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition">
                     <input type="radio" name="build-mode" value="single" class="w-4 h-4 text-indigo-600" checked>
                     <span class="text-sm font-medium text-gray-700">낱개 단위 (1개씩)</span>
                 </label>
-                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-pink-50 transition border border-transparent hover:border-pink-200">
+                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-pink-50 transition">
                     <input type="radio" name="build-mode" value="row" class="w-4 h-4 radio-pink">
                     <span class="text-sm font-medium text-gray-700">가로 단위 <span class="text-xs text-pink-500 font-normal">(가로 길이 고정)</span></span>
                 </label>
-                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-blue-50 transition border border-transparent hover:border-blue-200">
+                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-blue-50 transition">
                     <input type="radio" name="build-mode" value="layer" class="w-4 h-4 radio-blue">
                     <span class="text-sm font-medium text-gray-700">층 단위 <span class="text-xs text-blue-500 font-normal">(1층 크기 고정)</span></span>
                 </label>
-                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-green-50 transition border border-transparent hover:border-green-200">
+                <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-green-50 transition">
                     <input type="radio" name="build-mode" value="all" class="w-4 h-4 radio-green">
                     <span class="text-sm font-medium text-gray-700">전체 채우기 <span class="text-xs text-green-500 font-normal">(높이까지 고정)</span></span>
                 </label>
             </div>
+
+            <div class="flex space-x-2 mb-2">
+                <button id="btn-add" class="flex-1 bg-[#5C5CDB] hover:bg-indigo-600 text-white font-bold py-3 rounded-xl shadow active:scale-95 text-sm flex items-center justify-center gap-1">➕ 추가</button>
+                <button id="btn-remove" class="flex-1 bg-[#9CA3AF] hover:bg-gray-500 text-white font-bold py-3 rounded-xl shadow active:scale-95 text-sm flex items-center justify-center gap-1">➖ 빼기</button>
+            </div>
+            <div class="flex space-x-2">
+                <button id="btn-play" class="flex-[2] bg-[#54B681] hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow active:scale-95 text-sm flex items-center justify-center gap-1">▶ 자동 쌓기</button>
+                <button id="btn-reset" class="flex-1 bg-white border-2 border-red-200 text-[#E35453] hover:bg-red-50 font-bold py-3 rounded-xl shadow-sm active:scale-95 text-sm">초기화</button>
+            </div>
         </div>
 
-        <!-- 조작 버튼 영역 -->
-        <div class="flex space-x-2 mb-3">
-            <button id="btn-add" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl shadow hover:bg-indigo-700 transition active:scale-95 flex justify-center items-center gap-1">
-                ➕ 추가
-            </button>
-            <button id="btn-remove" class="flex-1 bg-slate-400 text-white font-bold py-3 rounded-xl shadow hover:bg-slate-500 transition active:scale-95 flex justify-center items-center gap-1">
-                ➖ 빼기
-            </button>
+        <!-- ========================================== -->
+        <!-- 2. 하나의 조각 (단위 변환) 모드 패널 -->
+        <!-- ========================================== -->
+        <div id="single-controls" class="hidden bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-4">
+            <h2 class="text-sm font-bold text-emerald-800 mb-2">📏 하나의 덩어리 (cm 단위 정수 입력)</h2>
+            <p class="text-[11px] text-emerald-600 mb-3">m³로 보기 시, 1cm³ 얇은 선 위에 1m³(100cm) 간격의 굵은 선이 표시됩니다.</p>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-pink-600 mb-1 text-center">가로(cm)</label>
+                    <input type="number" id="single-w" value="200" min="1" max="2000" class="w-full border-2 border-pink-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-pink-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-blue-600 mb-1 text-center">세로(cm)</label>
+                    <input type="number" id="single-d" value="30" min="1" max="2000" class="w-full border-2 border-blue-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-blue-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-green-600 mb-1 text-center">높이(cm)</label>
+                    <input type="number" id="single-h" value="50" min="1" max="2000" class="w-full border-2 border-green-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-green-500 focus:outline-none transition">
+                </div>
+            </div>
+            <button id="btn-apply-single" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-emerald-700 transition text-sm mb-3">모양 생성 및 식 보기</button>
+            
+            <div class="flex items-center justify-center space-x-2 bg-white p-1 rounded-lg border border-emerald-100">
+                <span class="text-xs font-bold text-gray-500 px-2">단위 변환</span>
+                <button id="btn-view-cm" class="flex-1 bg-gray-700 text-white text-xs font-bold py-1.5 rounded-md shadow-sm">cm³로 보기</button>
+                <button id="btn-view-m" class="flex-1 bg-gray-200 text-gray-600 hover:bg-gray-300 text-xs font-bold py-1.5 rounded-md transition">m³ 단위선 켜기</button>
+            </div>
         </div>
-        <div class="flex space-x-2 mb-6">
-            <button id="btn-play" class="flex-2 w-2/3 bg-emerald-500 text-white font-bold py-3 rounded-xl shadow hover:bg-emerald-600 transition active:scale-95 flex justify-center items-center gap-1">
-                ▶ 자동 쌓기
-            </button>
-            <button id="btn-reset" class="flex-1 border-2 border-red-200 text-red-500 font-bold py-3 rounded-xl hover:bg-red-50 transition active:scale-95">
-                초기화
+
+        <!-- ========================================== -->
+        <!-- 3. 1m³ 애니메이션 모드 패널 -->
+        <!-- ========================================== -->
+        <div id="meter-controls" class="hidden bg-indigo-50 p-4 rounded-xl border border-indigo-200 mb-4">
+            <h2 class="text-sm font-bold text-indigo-800 mb-2">🧊 1m³ = 1,000,000cm³</h2>
+            <p class="text-xs text-indigo-600 mb-3">1cm³ 단위 조각이 1m³ 상자를 어떻게 채우는지 확인합니다.</p>
+            
+            <div class="mb-4 bg-white p-2 rounded-lg border border-indigo-100 shadow-sm">
+                <div class="flex justify-between text-[10px] font-bold text-indigo-400 mb-1 px-1">
+                    <span>느리게</span>
+                    <span class="text-indigo-600">애니메이션 속도</span>
+                    <span>빠르게</span>
+                </div>
+                <input type="range" id="meter-speed" min="0.1" max="5" step="0.1" value="1" class="w-full accent-indigo-600">
+            </div>
+
+            <button id="btn-play-meter" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-indigo-700 transition text-sm">
+                ▶ 1m³ 채우기 애니메이션 시작
             </button>
         </div>
 
         <div class="flex-grow"></div>
 
-        <!-- 수식 영역 (교과서 스타일) -->
+        <!-- 공통 수식 영역 -->
         <div class="border-2 border-dashed border-gray-300 rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center mt-auto bg-white mb-2 shadow-sm">
-            <p class="text-sm text-gray-600 font-bold mb-3">부피 구하는 식</p>
-            <div class="flex items-center justify-center gap-1 md:gap-1 w-full">
-                <!-- 가로 칸 -->
-                <div class="w-8 h-12 md:w-12 md:h-14 border-[3px] border-pink-300 rounded-xl flex items-center justify-center text-pink-600 bg-pink-50 text-xl md:text-2xl font-black shadow-sm shrink-0" id="val-x"></div>
-                <span class="text-gray-400 text-xl font-bold shrink-0">×</span>
-                <!-- 세로 칸 -->
-                <div class="w-8 h-12 md:w-12 md:h-14 border-[3px] border-blue-300 rounded-xl flex items-center justify-center text-blue-600 bg-blue-50 text-xl md:text-2xl font-black shadow-sm shrink-0" id="val-z"></div>
-                <span class="text-gray-400 text-xl font-bold shrink-0">×</span>
-                <!-- 높이 칸 -->
-                <div class="w-8 h-12 md:w-12 md:h-14 border-[3px] border-green-300 rounded-xl flex items-center justify-center text-green-600 bg-green-50 text-xl md:text-2xl font-black shadow-sm shrink-0" id="val-y"></div>
-                <span class="text-gray-400 text-xl font-bold shrink-0">=</span>
-                <!-- 결과 칸 -->
-                <div class="w-12 h-12 md:w-16 md:h-14 border-[3px] border-gray-300 rounded-xl flex items-center justify-center text-gray-800 bg-white text-xl md:text-2xl font-black shadow-sm shrink-0 transition-colors duration-300" id="val-total"></div>
-                <span class="text-sm md:text-base text-gray-700 font-bold shrink-0">(개)</span>
+            <p class="text-sm text-gray-600 font-bold mb-3" id="formula-title">부피 구하는 식 (cm³)</p>
+            <div class="flex items-center justify-center gap-1.5 w-full flex-wrap">
+                <div class="min-w-[2.5rem] px-2 h-12 border-[3px] border-pink-300 rounded-xl flex items-center justify-center text-pink-600 bg-pink-50 text-lg md:text-xl font-black shadow-sm" id="val-x"></div>
+                <span class="text-gray-400 text-xl font-bold">×</span>
+                <div class="min-w-[2.5rem] px-2 h-12 border-[3px] border-blue-300 rounded-xl flex items-center justify-center text-blue-600 bg-blue-50 text-lg md:text-xl font-black shadow-sm" id="val-z"></div>
+                <span class="text-gray-400 text-xl font-bold">×</span>
+                <div class="min-w-[2.5rem] px-2 h-12 border-[3px] border-green-300 rounded-xl flex items-center justify-center text-green-600 bg-green-50 text-lg md:text-xl font-black shadow-sm" id="val-y"></div>
+                <span class="text-gray-400 text-xl font-bold">=</span>
+                <div class="min-w-[3.5rem] px-2 h-12 border-[3px] border-gray-300 rounded-xl flex items-center justify-center text-gray-800 bg-white text-lg md:text-xl font-black shadow-sm transition-colors" id="val-total"></div>
+                <span class="text-xs md:text-sm text-gray-700 font-bold shrink-0 mt-1" id="val-unit">(개)</span>
             </div>
         </div>
     </div>
 
     <!-- 우측 3D 캔버스 -->
-    <div class="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200" id="canvas-container">
-        <!-- 뷰포트 도움말 -->
-        <div class="absolute top-4 left-4 bg-white/80 backdrop-blur px-3 py-1.5 rounded-full shadow-sm text-xs text-gray-600 font-medium pointer-events-none z-10 flex items-center gap-2">
-            <span>🖱️ 마우스 드래그: 시점 회전</span>
-            <span class="text-gray-300">|</span>
-            <span>휠: 확대/축소</span>
-        </div>
-    </div>
+    <div class="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200" id="canvas-container"></div>
 
-    <!-- Three.js 및 OrbitControls 로드 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
-        // 전역 변수
         let scene, camera, renderer, controls;
-        let blocks = [];
-        let wireframeBox = null;
-        let currentCount = 0;
-        let size = { w: 6, d: 4, h: 5 }; // 가로(x), 세로(z), 높이(y)
+        let blocks = [], wireframeBox = null;
+        let currentMode = 'normal'; 
         
+        let currentCount = 0;
+        let size = { w: 6, d: 4, h: 5 };
         let isPlaying = false;
         let playInterval;
+        
+        let singleMesh = null;
+        let viewUnit = 'cm'; 
+        
+        let meterAnimGroup = null;
+        let meterBlock = null;
+        let animRequestId = null;
+        let meterState = { phase: 0, x: 1, z: 1, y: 1 };
 
-        // Three.js 초기화
         function initThree() {
             const container = document.getElementById('canvas-container');
-            
             scene = new THREE.Scene();
-            // 배경 투명하게 하여 CSS 그라디언트 보이게 함
-            scene.background = null; 
-
-            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 5000);
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            // 교과서 스타일의 깔끔한 렌더링을 위해 그림자(ShadowMap) 비활성화
             container.appendChild(renderer.domElement);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2 + 0.1; // 바닥 아래로 너무 많이 못가게
 
-            // 조명 설정
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
             hemiLight.position.set(0, 20, 0);
             scene.add(hemiLight);
-
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
             dirLight.position.set(20, 30, 20);
-            // 그림자 캐스팅 제거
             scene.add(dirLight);
 
-            // 리사이즈 이벤트
-            window.addEventListener('resize', onWindowResize, false);
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
         }
 
-        // 상자 및 쌓기나무 초기화
-        function initBox() {
-            // 재생 중이면 정지
-            if(isPlaying) togglePlay();
-
-            // 1. 기존 객체 제거
+        function clearScene() {
+            if (animRequestId) cancelAnimationFrame(animRequestId);
+            if (isPlaying) togglePlay();
+            
             blocks.forEach(b => {
                 b.geometry.dispose();
-                b.material.dispose();
+                if(Array.isArray(b.material)) b.material.forEach(m=>m.dispose());
+                else b.material.dispose();
                 scene.remove(b);
             });
             blocks = [];
             
-            if (wireframeBox) {
-                scene.remove(wireframeBox);
-                wireframeBox = null;
+            if (wireframeBox) { scene.remove(wireframeBox); wireframeBox = null; }
+            if (meterAnimGroup) { scene.remove(meterAnimGroup); meterAnimGroup = null; }
+            if (singleMesh) {
+                singleMesh.geometry.dispose();
+                if(Array.isArray(singleMesh.material)) singleMesh.material.forEach(m=>m.dispose());
+                else singleMesh.material.dispose();
+                
+                if (singleMesh.userData.normalEdges) {
+                    singleMesh.userData.normalEdges.geometry.dispose();
+                    singleMesh.userData.normalEdges.material.dispose();
+                }
+                if (singleMesh.userData.thickEdges) {
+                    singleMesh.userData.thickEdges.children.forEach(child => {
+                        child.geometry.dispose();
+                        child.material.dispose();
+                    });
+                }
+                
+                scene.remove(singleMesh);
+                singleMesh = null;
             }
             
+            document.getElementById('val-x').textContent = '';
+            document.getElementById('val-z').textContent = '';
+            document.getElementById('val-y').textContent = '';
+            document.getElementById('val-total').textContent = '';
+            document.getElementById('val-unit').textContent = '';
+        }
+
+        // ==========================================
+        // 1. 기본 쌓기 모드 (낱개)
+        // ==========================================
+        function initNormalBox() {
+            clearScene();
             currentCount = 0;
+            if (isPlaying) togglePlay();
 
-            // 2. 입력값 가져오기
-            size.w = Math.max(1, Math.min(10, parseInt(document.getElementById('input-w').value) || 6));
-            size.d = Math.max(1, Math.min(10, parseInt(document.getElementById('input-d').value) || 4));
-            size.h = Math.max(1, Math.min(10, parseInt(document.getElementById('input-h').value) || 5));
-            
-            // 입력 폼에 보정된 값 다시 반영
-            document.getElementById('input-w').value = size.w;
-            document.getElementById('input-d').value = size.d;
-            document.getElementById('input-h').value = size.h;
+            size.w = Math.max(1, Math.min(100, parseInt(document.getElementById('input-w').value) || 6));
+            size.d = Math.max(1, Math.min(100, parseInt(document.getElementById('input-d').value) || 4));
+            size.h = Math.max(1, Math.min(100, parseInt(document.getElementById('input-h').value) || 5));
 
-            // 중앙 정렬을 위한 오프셋 계산 (모든 블록의 중심이 0,0,0이 되도록)
+            document.getElementById('formula-title').textContent = "부피 구하는 식 (cm³)";
+            document.getElementById('val-unit').textContent = "(cm³)";
+
             const offsetX = -(size.w - 1) / 2;
             const offsetY = -(size.h - 1) / 2;
             const offsetZ = -(size.d - 1) / 2;
 
-            // 3. 투명 외곽 상자 생성
             const outerGroup = new THREE.Group();
-            
             const outerGeo = new THREE.BoxGeometry(size.w, size.h, size.d);
-            
-            // 테두리 선
-            const outerEdges = new THREE.EdgesGeometry(outerGeo);
-            const edgeMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.8 });
-            const wireframe = new THREE.LineSegments(outerEdges, edgeMat);
-            
-            // 투명 면
-            const faceMat = new THREE.MeshBasicMaterial({ 
-                color: 0xf1f5f9, 
-                transparent: true, 
-                opacity: 0.15, 
-                side: THREE.DoubleSide,
-                depthWrite: false
-            });
-            const faces = new THREE.Mesh(outerGeo, faceMat);
-            
-            outerGroup.add(wireframe);
-            outerGroup.add(faces);
-            
-            // 외곽 상자의 중심을 원점에 맞춤 (블록들이 원점을 중심으로 배치되므로, 외곽상자는 정중앙에 위치)
-            outerGroup.position.set(0, 0, 0); 
+            const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(outerGeo), new THREE.LineBasicMaterial({ color: 0x94a3b8, opacity: 0.8, transparent: true }));
+            const faces = new THREE.Mesh(outerGeo, new THREE.MeshBasicMaterial({ color: 0xf1f5f9, transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthWrite: false }));
+            outerGroup.add(wireframe); outerGroup.add(faces);
             scene.add(outerGroup);
             wireframeBox = outerGroup;
 
-            // 4. 쌓기나무(블록) 생성
             const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-            // 블록 외곽선
             const blockEdges = new THREE.EdgesGeometry(boxGeo);
             const blockEdgeMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 });
 
-            // 블록 생성 순서: y(층) -> 깊이(앞에서 뒤로) -> x(가로, 왼쪽에서 오른쪽)
-            // 교과서 그림과 같이 맨 앞줄부터 블록을 채우기 위해 depthStep 기준 도입
-            for (let y = 0; y < size.h; y++) {
-                for (let depthStep = 0; depthStep < size.d; depthStep++) {
-                    for (let x = 0; x < size.w; x++) {
-                        
-                        // 실제 3D 공간상의 z 좌표 (가장 앞이 제일 큰 값, 뒤로 갈수록 작아짐)
-                        let z = size.d - 1 - depthStep;
-                        
-                        // 하나의 블록에 6개의 면(Face)을 다르게 칠하기 위해 다중 재질 배열 생성
-                        // 순서: [0:Right(x+), 1:Left(x-), 2:Top(y+), 3:Bottom(y-), 4:Front(z+), 5:Back(z-)]
-                        let mats = [];
-                        for(let i=0; i<6; i++) {
-                            mats.push(new THREE.MeshLambertMaterial({ color: 0xeec68b })); // 기본 나무색
-                        }
-
-                        // 1. 가로선: 1층 맨 앞줄
-                        if (y === 0 && depthStep === 0) {
-                            mats.forEach(m => m.color.setHex(0xf4a6a6)); // 핑크
-                        }
-
-                        // 2. 세로선: 1층 맨 우측줄
-                        if (y === 0 && x === size.w - 1) {
-                            if (depthStep === 0) {
-                                // 가로선(핑크)과 겹치는 맨 앞 우측 모서리
-                                mats[0].color.setHex(0x8cb6f0); // 우측면 파랑
-                                mats[5].color.setHex(0x8cb6f0); // 뒷면 파랑
-                            } else {
-                                // 나머지 세로선
-                                mats.forEach(m => m.color.setHex(0x8cb6f0)); // 파랑
+            if(size.w * size.d * size.h <= 10000) {
+                for (let y = 0; y < size.h; y++) {
+                    for (let d = 0; d < size.d; d++) {
+                        for (let x = 0; x < size.w; x++) {
+                            let z = size.d - 1 - d;
+                            
+                            // 색상 로직 복구
+                            let mats = [];
+                            for(let i=0; i<6; i++) {
+                                mats.push(new THREE.MeshLambertMaterial({ color: 0xeec68b })); // 기본 나무색
                             }
-                        }
 
-                        // 3. 높이선: 맨 우측 맨 뒷줄 기둥
-                        if (x === size.w - 1 && depthStep === size.d - 1) {
-                            if (y > 0) {
-                                // 2층 이상 기둥은 전체 초록
-                                mats.forEach(m => m.color.setHex(0x82c8a0)); // 초록
-                            } else {
-                                // 1층 바닥 모서리: 세로선(파랑)과 겹치는 부분 (사용자 요청 반영)
-                                mats[5].color.setHex(0x82c8a0); // 뒷면은 초록 (기둥 느낌)
-                                if (size.d === 1) {
-                                    mats[0].color.setHex(0x82c8a0); // 세로가 1칸뿐이면 우측면도 초록
+                            // 1. 가로선: 1층 맨 앞줄
+                            if (y === 0 && d === 0) {
+                                mats.forEach(m => m.color.setHex(0xf4a6a6)); // 핑크
+                            }
+
+                            // 2. 세로선: 1층 맨 우측줄
+                            if (y === 0 && x === size.w - 1) {
+                                if (d === 0) {
+                                    mats[0].color.setHex(0x8cb6f0); // 우측면 파랑
+                                    mats[5].color.setHex(0x8cb6f0); // 뒷면 파랑
+                                } else {
+                                    mats.forEach(m => m.color.setHex(0x8cb6f0)); // 파랑
                                 }
-                                // 세로가 2칸 이상이면 우측면은 파란색(세로선)을 그대로 유지하여 끊기지 않게 함
                             }
-                        }
 
-                        // 단일 재질 대신 다중 재질(mats) 배열 적용
-                        const mesh = new THREE.Mesh(boxGeo, mats);
-                        
-                        // 위치 설정 (오프셋을 더해 중앙 정렬)
-                        mesh.position.set(x + offsetX, y + offsetY, z + offsetZ);
-                        // 블록의 그림자 속성 제거로 중간에 층 지는 버그 해결
-                        
-                        // 테두리 추가
-                        const edges = new THREE.LineSegments(blockEdges, blockEdgeMat);
-                        mesh.add(edges);
-                        
-                        mesh.visible = false; // 초기에는 숨김
-                        scene.add(mesh);
-                        blocks.push(mesh);
+                            // 3. 높이선: 맨 우측 맨 뒷줄 기둥
+                            if (x === size.w - 1 && d === size.d - 1) {
+                                if (y > 0) {
+                                    mats.forEach(m => m.color.setHex(0x82c8a0)); // 초록
+                                } else {
+                                    mats[5].color.setHex(0x82c8a0); // 뒷면은 초록
+                                    if (size.d === 1) {
+                                        mats[0].color.setHex(0x82c8a0); // 세로가 1칸뿐이면 우측면도 초록
+                                    }
+                                }
+                            }
+
+                            const mesh = new THREE.Mesh(boxGeo, mats);
+                            mesh.position.set(x + offsetX, y + offsetY, z + offsetZ);
+                            mesh.add(new THREE.LineSegments(blockEdges, blockEdgeMat));
+                            mesh.visible = false;
+                            scene.add(mesh);
+                            blocks.push(mesh);
+                        }
                     }
                 }
+            } else {
+                alert("기본 모드에서는 브라우저 성능을 위해 총합 10,000개 이하까지만 권장합니다. 큰 치수는 '단위 변환(조각)' 모드를 사용하세요.");
             }
 
-            // 5. 카메라 위치 조정 (상자 크기에 비례하여 거리 계산)
             const maxDim = Math.max(size.w, size.d, size.h);
             camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 2.0);
             controls.target.set(0, 0, 0);
-            controls.update();
-
-            updateUI();
+            updateNormalUI();
         }
 
-        // 블록 추가 로직
+        function updateNormalUI() {
+            let dx = '', dz = '', dy = '';
+            if (currentCount > 0) {
+                const layerSize = size.w * size.d;
+                if (currentCount <= size.w) { dx = currentCount; dz = 1; dy = 1; }
+                else if (currentCount <= layerSize) { dx = size.w; dz = Math.ceil(currentCount / size.w); dy = 1; }
+                else { dx = size.w; dz = size.d; dy = Math.ceil(currentCount / layerSize); }
+            }
+            document.getElementById('val-x').textContent = dx;
+            document.getElementById('val-z').textContent = dz;
+            document.getElementById('val-y').textContent = dy;
+            document.getElementById('val-total').textContent = currentCount > 0 ? currentCount.toLocaleString() : '';
+        }
+
+        function renderBlocksVisible() {
+            for (let i = 0; i < blocks.length; i++) {
+                blocks[i].visible = i < currentCount;
+            }
+        }
+
         function addBlocks() {
             const mode = document.querySelector('input[name="build-mode"]:checked').value;
             const total = size.w * size.d * size.h;
             
-            if (currentCount >= total) return; // 이미 꽉참
+            if (currentCount >= total) return; 
 
             if (mode === 'single') {
                 currentCount += 1;
             } else if (mode === 'row') {
-                // 가로 한 줄 추가
                 const remainder = currentCount % size.w;
                 if (remainder === 0) currentCount += size.w;
-                else currentCount += (size.w - remainder); // 남은 줄 채우기
+                else currentCount += (size.w - remainder);
             } else if (mode === 'layer') {
-                // 1층 추가
                 const layerSize = size.w * size.d;
                 const remainder = currentCount % layerSize;
                 if (remainder === 0) currentCount += layerSize;
-                else currentCount += (layerSize - remainder); // 남은 층 채우기
+                else currentCount += (layerSize - remainder); 
             } else if (mode === 'all') {
                 currentCount = total;
             }
 
             if (currentCount > total) currentCount = total;
             renderBlocksVisible();
-            updateUI();
+            updateNormalUI();
         }
 
-        // 블록 빼기 로직
         function removeBlocks() {
             const mode = document.querySelector('input[name="build-mode"]:checked').value;
             
@@ -361,160 +382,413 @@
             } else if (mode === 'row') {
                 const remainder = currentCount % size.w;
                 if (remainder === 0) currentCount -= size.w;
-                else currentCount -= remainder; // 불완전한 줄 제거
+                else currentCount -= remainder;
             } else if (mode === 'layer') {
                 const layerSize = size.w * size.d;
                 const remainder = currentCount % layerSize;
                 if (remainder === 0) currentCount -= layerSize;
-                else currentCount -= remainder; // 불완전한 층 제거
+                else currentCount -= remainder;
             } else if (mode === 'all') {
                 currentCount = 0;
             }
 
             if (currentCount < 0) currentCount = 0;
             renderBlocksVisible();
-            updateUI();
+            updateNormalUI();
         }
 
-        // visible 속성 업데이트
-        function renderBlocksVisible() {
-            for (let i = 0; i < blocks.length; i++) {
-                blocks[i].visible = i < currentCount;
-            }
-        }
-
-        // UI 및 수식 업데이트
-        function updateUI() {
-            let displayX = '', displayZ = '', displayY = '';
-            
-            if (currentCount > 0) {
-                const layerSize = size.w * size.d;
-                
-                if (currentCount <= size.w) {
-                    // 1단계: 가로 채우기 중
-                    displayX = currentCount;
-                    displayZ = 1; // 1단계 진행중임을 나타내기 위해 1로 고정
-                    displayY = 1;
-                } else if (currentCount <= layerSize) {
-                    // 2단계: 세로로 확장 중 (1층)
-                    displayX = size.w; // 가로는 꽉 참
-                    displayZ = Math.ceil(currentCount / size.w);
-                    displayY = 1;
-                } else {
-                    // 3단계: 높이로 확장 중
-                    displayX = size.w;
-                    displayZ = size.d; // 세로도 꽉 참
-                    displayY = Math.ceil(currentCount / layerSize);
-                }
-            }
-
-            // HTML 요소 업데이트
-            document.getElementById('val-x').textContent = displayX;
-            document.getElementById('val-z').textContent = displayZ;
-            document.getElementById('val-y').textContent = displayY;
-            
-            const totalEl = document.getElementById('val-total');
-            if (currentCount > 0) {
-                totalEl.textContent = currentCount;
-                // 꽉 찼을 때 강조 효과
-                if (currentCount === size.w * size.d * size.h) {
-                    totalEl.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-400');
-                    totalEl.classList.remove('bg-white', 'text-gray-800', 'border-gray-300');
-                } else {
-                    totalEl.classList.remove('bg-yellow-100', 'text-yellow-800', 'border-yellow-400');
-                    totalEl.classList.add('bg-white', 'text-gray-800', 'border-gray-300');
-                }
-            } else {
-                totalEl.textContent = '';
-                totalEl.classList.remove('bg-yellow-100', 'text-yellow-800', 'border-yellow-400');
-                totalEl.classList.add('bg-white', 'text-gray-800', 'border-gray-300');
-            }
-        }
-
-        // 자동 재생 토글
         function togglePlay() {
             isPlaying = !isPlaying;
             const btn = document.getElementById('btn-play');
             const total = size.w * size.d * size.h;
 
             if (isPlaying) {
-                // 이미 꽉 차있으면 처음부터 다시
                 if (currentCount >= total) {
                     currentCount = 0;
                     renderBlocksVisible();
-                    updateUI();
+                    updateNormalUI();
                 }
 
                 btn.innerHTML = '⏸ 정지';
-                btn.classList.replace('bg-emerald-500', 'bg-amber-500');
+                btn.classList.replace('bg-[#54B681]', 'bg-amber-500');
                 btn.classList.replace('hover:bg-emerald-600', 'hover:bg-amber-600');
                 
-                // 모드에 따라 스피드 조절
                 const mode = document.querySelector('input[name="build-mode"]:checked').value;
-                let speed = 250; // 기본 낱개
+                let speed = 250;
                 if (mode === 'row') speed = 500;
                 if (mode === 'layer') speed = 800;
                 if (mode === 'all') speed = 1000;
 
                 playInterval = setInterval(() => {
                     if (currentCount >= total) {
-                        togglePlay(); // 끝까지 가면 자동 정지
+                        togglePlay(); 
                         return;
                     }
                     addBlocks();
                 }, speed);
             } else {
                 btn.innerHTML = '▶ 자동 쌓기';
-                btn.classList.replace('bg-amber-500', 'bg-emerald-500');
+                btn.classList.replace('bg-amber-500', 'bg-[#54B681]');
                 btn.classList.replace('hover:bg-amber-600', 'hover:bg-emerald-600');
                 clearInterval(playInterval);
             }
         }
 
-        // 창 크기 변경 핸들러
-        function onWindowResize() {
-            const container = document.getElementById('canvas-container');
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
+        // ==========================================
+        // 2. 하나의 조각 (단위 변환 / 1m³ 그리드 선)
+        // ==========================================
+        function initSingleBox() {
+            clearScene();
+            
+            const w = Math.max(1, parseInt(document.getElementById('single-w').value) || 200);
+            const d = Math.max(1, parseInt(document.getElementById('single-d').value) || 30);
+            const h = Math.max(1, parseInt(document.getElementById('single-h').value) || 50);
+            
+            document.getElementById('single-w').value = w;
+            document.getElementById('single-d').value = d;
+            document.getElementById('single-h').value = h;
+            
+            const boxGeo = new THREE.BoxGeometry(w, h, d);
+            let mats = [
+                new THREE.MeshLambertMaterial({ color: 0x8cb6f0 }), 
+                new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
+                new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
+                new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
+                new THREE.MeshLambertMaterial({ color: 0xf4a6a6 }), 
+                new THREE.MeshLambertMaterial({ color: 0x82c8a0 }), 
+            ];
+            
+            singleMesh = new THREE.Mesh(boxGeo, mats);
+            
+            const getIntervals = (max, step) => {
+                let res = [];
+                for(let i=0; i<=max; i+=step) res.push(i);
+                if (Math.abs(res[res.length-1] - max) > 0.001) res.push(max);
+                return res;
+            };
+
+            const hw = w / 2, hh = h / 2, hd = d / 2;
+            const points = [];
+
+            if (w <= 1000 && h <= 1000 && d <= 1000) {
+                const xVals1 = getIntervals(w, 1);
+                const yVals1 = getIntervals(h, 1);
+                const zVals1 = getIntervals(d, 1);
+
+                xVals1.forEach(x => {
+                    points.push(new THREE.Vector3(x - hw, -hh, hd), new THREE.Vector3(x - hw, hh, hd));
+                    points.push(new THREE.Vector3(x - hw, -hh, -hd), new THREE.Vector3(x - hw, hh, -hd));
+                    points.push(new THREE.Vector3(x - hw, hh, -hd), new THREE.Vector3(x - hw, hh, hd));
+                    points.push(new THREE.Vector3(x - hw, -hh, -hd), new THREE.Vector3(x - hw, -hh, hd));
+                });
+                yVals1.forEach(y => {
+                    points.push(new THREE.Vector3(-hw, y - hh, hd), new THREE.Vector3(hw, y - hh, hd));
+                    points.push(new THREE.Vector3(-hw, y - hh, -hd), new THREE.Vector3(hw, y - hh, -hd));
+                    points.push(new THREE.Vector3(hw, y - hh, -hd), new THREE.Vector3(hw, y - hh, hd));
+                    points.push(new THREE.Vector3(-hw, y - hh, -hd), new THREE.Vector3(-hw, y - hh, hd));
+                });
+                zVals1.forEach(z => {
+                    points.push(new THREE.Vector3(-hw, hh, hd - z), new THREE.Vector3(hw, hh, hd - z));
+                    points.push(new THREE.Vector3(-hw, -hh, hd - z), new THREE.Vector3(hw, -hh, hd - z));
+                    points.push(new THREE.Vector3(hw, -hh, hd - z), new THREE.Vector3(hw, hh, hd - z));
+                    points.push(new THREE.Vector3(-hw, -hh, hd - z), new THREE.Vector3(-hw, hh, hd - z));
+                });
+            } else {
+                const edges = new THREE.EdgesGeometry(boxGeo);
+                const pts = edges.attributes.position.array;
+                for(let i=0; i<pts.length; i+=3) {
+                    points.push(new THREE.Vector3(pts[i], pts[i+1], pts[i+2]));
+                }
+            }
+
+            const thinGeo = new THREE.BufferGeometry().setFromPoints(points);
+            const normalEdges = new THREE.LineSegments(
+                thinGeo,
+                new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 })
+            );
+            singleMesh.add(normalEdges);
+            
+            const thickEdges = new THREE.Group();
+            const t = Math.max(0.5, Math.max(w, d, h) * 0.008); 
+            const thickMat = new THREE.MeshBasicMaterial({ color: 0x1e1b4b }); 
+            
+            const xVals100 = getIntervals(w, 100);
+            const yVals100 = getIntervals(h, 100);
+            const zVals100 = getIntervals(d, 100);
+
+            yVals100.forEach(y => {
+                zVals100.forEach(z => {
+                    const edgeGeo = new THREE.BoxGeometry(w + t, t, t);
+                    const edgeMesh = new THREE.Mesh(edgeGeo, thickMat);
+                    edgeMesh.position.set(0, y - h/2, d/2 - z);
+                    thickEdges.add(edgeMesh);
+                });
+            });
+
+            xVals100.forEach(x => {
+                zVals100.forEach(z => {
+                    const edgeGeo = new THREE.BoxGeometry(t, h + t, t);
+                    const edgeMesh = new THREE.Mesh(edgeGeo, thickMat);
+                    edgeMesh.position.set(x - w/2, 0, d/2 - z);
+                    thickEdges.add(edgeMesh);
+                });
+            });
+
+            xVals100.forEach(x => {
+                yVals100.forEach(y => {
+                    const edgeGeo = new THREE.BoxGeometry(t, t, d + t);
+                    const edgeMesh = new THREE.Mesh(edgeGeo, thickMat);
+                    edgeMesh.position.set(x - w/2, y - h/2, 0);
+                    thickEdges.add(edgeMesh);
+                });
+            });
+
+            singleMesh.add(thickEdges);
+            
+            singleMesh.userData.normalEdges = normalEdges;
+            singleMesh.userData.thickEdges = thickEdges;
+            
+            if (viewUnit === 'cm') {
+                normalEdges.visible = true;
+                thickEdges.visible = false;
+            } else {
+                normalEdges.visible = true;
+                thickEdges.visible = true;
+            }
+            
+            scene.add(singleMesh);
+
+            const maxDim = Math.max(w, d, h);
+            camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 2.0);
+            controls.target.set(0, 0, 0);
+
+            updateSingleUI(w, d, h);
         }
 
-        // 애니메이션 루프
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update(); // Damping을 위해 필수
-            renderer.render(scene, camera);
+        function updateSingleUI(w, d, h) {
+            const cleanNum = (num) => Number(num.toFixed(6));
+            let valX, valZ, valY, total;
+
+            if (viewUnit === 'cm') {
+                document.getElementById('formula-title').textContent = "부피 구하는 식 (cm³ 단위)";
+                document.getElementById('val-unit').textContent = "(cm³)";
+                valX = w; valZ = d; valY = h;
+                total = cleanNum(w * d * h);
+            } else {
+                document.getElementById('formula-title').textContent = "부피 구하는 식 (m³ 단위 변환)";
+                document.getElementById('val-unit').textContent = "(m³)";
+                valX = cleanNum(w / 100);
+                valZ = cleanNum(d / 100);
+                valY = cleanNum(h / 100);
+                total = cleanNum(valX * valZ * valY);
+            }
+
+            document.getElementById('val-x').textContent = valX;
+            document.getElementById('val-z').textContent = valZ;
+            document.getElementById('val-y').textContent = valY;
+            document.getElementById('val-total').textContent = total.toLocaleString('ko-KR', {maximumFractionDigits: 6});
         }
 
-        // 이벤트 리스너 등록
-        document.getElementById('btn-create').addEventListener('click', initBox);
+        // ==========================================
+        // 3. 1m³ 애니메이션 모드
+        // ==========================================
+        function initMeterBox() {
+            clearScene();
+            meterState = { phase: 0, x: 1, z: 1, y: 1 };
+            
+            document.getElementById('formula-title').textContent = "1m³ 채우는 과정 (총 개수)";
+            document.getElementById('val-unit').textContent = "(개)";
+            updateMeterUI();
+
+            meterAnimGroup = new THREE.Group();
+            
+            const outerGeo = new THREE.BoxGeometry(100, 100, 100);
+            const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(outerGeo), new THREE.LineBasicMaterial({ color: 0x6366f1, opacity: 0.5, transparent: true }));
+            const faces = new THREE.Mesh(outerGeo, new THREE.MeshBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false }));
+            meterAnimGroup.add(wireframe);
+            meterAnimGroup.add(faces);
+
+            const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+            let mats = [
+                new THREE.MeshLambertMaterial({ color: 0x8cb6f0 }),
+                new THREE.MeshLambertMaterial({ color: 0x60a5fa }),
+                new THREE.MeshLambertMaterial({ color: 0x82c8a0 }),
+                new THREE.MeshLambertMaterial({ color: 0x4ade80 }),
+                new THREE.MeshLambertMaterial({ color: 0xf4a6a6 }),
+                new THREE.MeshLambertMaterial({ color: 0xf87171 }),
+            ];
+            meterBlock = new THREE.Mesh(boxGeo, mats);
+            meterBlock.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeo), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 })));
+
+            meterAnimGroup.add(meterBlock);
+            scene.add(meterAnimGroup);
+
+            updateMeterBlockTransform();
+            camera.position.set(150, 120, 200);
+            controls.target.set(0, 0, 0);
+        }
+
+        function updateMeterBlockTransform() {
+            if(!meterBlock) return;
+            meterBlock.scale.set(meterState.x, meterState.y, meterState.z);
+            const startX = -50, startY = -50, startZ = 50; 
+            meterBlock.position.set(startX + (meterState.x / 2), startY + (meterState.y / 2), startZ - (meterState.z / 2));
+        }
+
+        function updateMeterUI() {
+            document.getElementById('val-x').textContent = Math.floor(meterState.x);
+            document.getElementById('val-z').textContent = Math.floor(meterState.z);
+            document.getElementById('val-y').textContent = Math.floor(meterState.y);
+            
+            const total = Math.floor(meterState.x) * Math.floor(meterState.z) * Math.floor(meterState.y);
+            document.getElementById('val-total').textContent = total.toLocaleString();
+
+            if(total === 1000000) document.getElementById('val-total').classList.add('bg-indigo-100', 'text-indigo-800');
+            else document.getElementById('val-total').classList.remove('bg-indigo-100', 'text-indigo-800');
+        }
+
+        function playMeterAnimation() {
+            if(meterState.phase !== 0) return;
+            meterState = { phase: 1, x: 1, z: 1, y: 1 };
+
+            function animateLoop() {
+                const speed = parseFloat(document.getElementById('meter-speed').value) || 1.0;
+
+                if(meterState.phase === 1) {
+                    meterState.x += speed;
+                    if(meterState.x >= 100) { meterState.x = 100; meterState.phase = 2; }
+                } else if(meterState.phase === 2) {
+                    meterState.z += speed;
+                    if(meterState.z >= 100) { meterState.z = 100; meterState.phase = 3; }
+                } else if(meterState.phase === 3) {
+                    meterState.y += speed;
+                    if(meterState.y >= 100) { meterState.y = 100; meterState.phase = 4; }
+                }
+
+                updateMeterBlockTransform();
+                updateMeterUI();
+
+                if(meterState.phase < 4) {
+                    animRequestId = requestAnimationFrame(animateLoop);
+                } else {
+                    meterState.phase = 0;
+                    document.getElementById('btn-play-meter').textContent = "🔄 1m³ 채우기 완료 (다시 보기)";
+                }
+            }
+            document.getElementById('btn-play-meter').textContent = "⏳ 채우는 중...";
+            animateLoop();
+        }
+
+        // ==========================================
+        // 이벤트 바인딩
+        // ==========================================
+        
+        function switchMode(mode) {
+            currentMode = mode;
+            ['normal', 'single', 'meter'].forEach(m => {
+                const btn = document.getElementById(`mode-${m}`);
+                const panel = document.getElementById(`${m}-controls`);
+                if (m === mode) {
+                    btn.classList.replace('bg-gray-200', 'bg-indigo-600');
+                    btn.classList.replace('text-gray-700', 'text-white');
+                    panel.classList.remove('hidden');
+                } else {
+                    btn.classList.replace('bg-indigo-600', 'bg-gray-200');
+                    btn.classList.replace('text-white', 'text-gray-700');
+                    panel.classList.add('hidden');
+                }
+            });
+
+            if (mode === 'normal') initNormalBox();
+            else if (mode === 'single') initSingleBox();
+            else if (mode === 'meter') initMeterBox();
+        }
+
+        document.getElementById('mode-normal').addEventListener('click', () => switchMode('normal'));
+        document.getElementById('mode-single').addEventListener('click', () => switchMode('single'));
+        document.getElementById('mode-meter').addEventListener('click', () => switchMode('meter'));
+
+        // 기본 모드 컨트롤
+        document.getElementById('btn-create').addEventListener('click', initNormalBox);
         document.getElementById('btn-add').addEventListener('click', () => {
-            if(isPlaying) togglePlay(); // 수동 조작시 재생 멈춤
+            if (blocks.length === 0) return; 
+            if (isPlaying) togglePlay();
             addBlocks();
         });
         document.getElementById('btn-remove').addEventListener('click', () => {
-            if(isPlaying) togglePlay();
+            if (blocks.length === 0) return; 
+            if (isPlaying) togglePlay();
             removeBlocks();
         });
-        document.getElementById('btn-play').addEventListener('click', togglePlay);
+        document.getElementById('btn-play').addEventListener('click', () => {
+            if (blocks.length === 0) return;
+            togglePlay();
+        });
         document.getElementById('btn-reset').addEventListener('click', () => {
-            if(isPlaying) togglePlay();
+            if (blocks.length === 0) return; 
+            if (isPlaying) togglePlay();
             currentCount = 0;
             renderBlocksVisible();
-            updateUI();
+            updateNormalUI();
         });
-
-        // 라디오 버튼 변경 시 재생 중이면 정지
+        
         document.querySelectorAll('input[name="build-mode"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 if (isPlaying) togglePlay();
             });
         });
 
-        // 초기 실행
+        // 하나의 조각 모드 컨트롤
+        document.getElementById('btn-apply-single').addEventListener('click', initSingleBox);
+        
+        document.getElementById('btn-view-cm').addEventListener('click', (e) => {
+            viewUnit = 'cm';
+            e.target.classList.replace('bg-gray-200', 'bg-gray-700');
+            e.target.classList.replace('text-gray-600', 'text-white');
+            document.getElementById('btn-view-m').classList.replace('bg-gray-700', 'bg-gray-200');
+            document.getElementById('btn-view-m').classList.replace('text-white', 'text-gray-600');
+            
+            if (singleMesh && singleMesh.userData.normalEdges) {
+                singleMesh.userData.normalEdges.visible = true;
+                singleMesh.userData.thickEdges.visible = false;
+            }
+            
+            const w = parseInt(document.getElementById('single-w').value) || 0;
+            const d = parseInt(document.getElementById('single-d').value) || 0;
+            const h = parseInt(document.getElementById('single-h').value) || 0;
+            updateSingleUI(w, d, h);
+        });
+
+        document.getElementById('btn-view-m').addEventListener('click', (e) => {
+            viewUnit = 'm';
+            e.target.classList.replace('bg-gray-200', 'bg-gray-700');
+            e.target.classList.replace('text-gray-600', 'text-white');
+            document.getElementById('btn-view-cm').classList.replace('bg-gray-700', 'bg-gray-200');
+            document.getElementById('btn-view-cm').classList.replace('text-white', 'text-gray-600');
+            
+            if (singleMesh && singleMesh.userData.thickEdges) {
+                singleMesh.userData.normalEdges.visible = true; 
+                singleMesh.userData.thickEdges.visible = true;  
+            }
+            
+            const w = parseInt(document.getElementById('single-w').value) || 0;
+            const d = parseInt(document.getElementById('single-d').value) || 0;
+            const h = parseInt(document.getElementById('single-h').value) || 0;
+            updateSingleUI(w, d, h);
+        });
+
+        // 1m³ 모드 컨트롤
+        document.getElementById('btn-play-meter').addEventListener('click', playMeterAnimation);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
         window.onload = () => {
             initThree();
-            initBox();
+            switchMode('normal');
             animate();
         };
     </script>
