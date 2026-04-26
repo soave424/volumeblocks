@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>직육면체 부피 구하기 3D</title>
+    <title>직육면체 겉넓이와 부피 구하기 3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; }
         #canvas-container canvas { touch-action: none; outline: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-50 flex flex-col md:flex-row h-screen overflow-hidden text-gray-800">
 
     <!-- 좌측 컨트롤 패널 -->
-    <div class="w-full md:w-80 lg:w-[26rem] bg-white shadow-xl p-6 flex flex-col z-10 overflow-y-auto shrink-0 border-b md:border-b-0 md:border-r border-gray-200">
-        <h1 class="text-xl font-extrabold text-gray-800 mb-1">직육면체 부피 구하기</h1>
-        <p class="text-xs text-gray-500 mb-4">상자 크기를 설정하고 단위 부피를 이해해 보세요.</p>
+    <div class="w-full md:w-80 lg:w-[28rem] bg-white shadow-xl p-5 md:p-6 flex flex-col z-10 overflow-y-auto shrink-0 border-b md:border-b-0 md:border-r border-gray-200">
+        <h1 class="text-xl font-extrabold text-gray-800 mb-1">부피와 겉넓이 3D</h1>
+        <p class="text-xs text-gray-500 mb-4">상자의 크기를 설정하고 부피와 겉넓이를 이해해 보세요.</p>
 
-        <!-- 모드 전환 (3가지 탭) - 잘림 현상 해결을 위해 flex-wrap 적용 -->
+        <!-- 모드 전환 (4가지 탭) -->
         <div class="flex flex-wrap gap-1.5 mb-5">
             <button id="mode-normal" class="flex-1 whitespace-nowrap bg-indigo-600 text-white font-bold py-2 px-2 rounded-lg text-xs shadow transition">기본 쌓기(cm³)</button>
-            <button id="mode-single" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition">단위 변환(조각)</button>
+            <button id="mode-single" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition">단위 변환</button>
             <button id="mode-meter" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition">1m³ 시각화</button>
+            <button id="mode-surface" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition text-pink-600">겉넓이 구하기</button>
         </div>
 
         <!-- ========================================== -->
@@ -96,7 +99,7 @@
                     <input type="number" id="single-h" value="50" min="1" max="2000" class="w-full border-2 border-green-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-green-500 focus:outline-none transition">
                 </div>
             </div>
-            <button id="btn-apply-single" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-emerald-700 transition text-sm mb-3">모양 생성 및 식 보기</button>
+            <button id="btn-apply-single" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-emerald-700 transition text-sm mb-3">모양 생성 및 식 갱신</button>
             
             <div class="flex items-center justify-center space-x-2 bg-white p-1 rounded-lg border border-emerald-100">
                 <span class="text-xs font-bold text-gray-500 px-2">단위 변환</span>
@@ -126,12 +129,56 @@
             </button>
         </div>
 
+        <!-- ========================================== -->
+        <!-- 4. 겉넓이 구하기 패널 -->
+        <!-- ========================================== -->
+        <div id="surface-controls" class="hidden bg-pink-50 p-4 rounded-xl border border-pink-200 mb-4">
+            <h2 class="text-sm font-bold text-pink-800 mb-2">📦 상자 크기 및 보기 설정</h2>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-pink-600 mb-1 text-center">가로(cm)</label>
+                    <input type="number" id="surf-w" value="6" min="1" max="50" class="w-full border-2 border-pink-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-pink-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-blue-600 mb-1 text-center">세로(cm)</label>
+                    <input type="number" id="surf-d" value="4" min="1" max="50" class="w-full border-2 border-blue-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-blue-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-green-600 mb-1 text-center">높이(cm)</label>
+                    <input type="number" id="surf-h" value="5" min="1" max="50" class="w-full border-2 border-green-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-green-500 focus:outline-none transition">
+                </div>
+            </div>
+            
+            <div class="flex space-x-2 mb-4">
+                <button id="btn-surf-solid" class="flex-1 bg-pink-600 text-white font-bold py-2 rounded-lg shadow-sm hover:bg-pink-700 transition text-sm">입체도 (겨냥도)</button>
+                <button id="btn-surf-net" class="flex-1 bg-white text-pink-600 border border-pink-300 font-bold py-2 rounded-lg shadow-sm hover:bg-pink-50 transition text-sm">펼친 모양 (전개도)</button>
+            </div>
+
+            <h2 class="text-sm font-bold text-pink-800 mb-2">🧮 겉넓이 구하는 방법 선택</h2>
+            <select id="surf-method" class="w-full border-2 border-pink-300 rounded-lg px-2 py-2 font-bold text-gray-700 text-sm md:text-base focus:outline-none focus:border-pink-500 bg-white">
+                <option value="1">방법 1: 6개 면의 넓이를 각각 구해 더하기</option>
+                <option value="2">방법 2: 합동인 3면의 넓이를 구해 2배 하기</option>
+                <option value="3">방법 3: (밑면×2) + (옆면 한 번에 구하기)</option>
+                <option value="4" id="surf-method-cube" disabled>방법 4: 정육면체 (1개 면 넓이 × 6)</option>
+            </select>
+        </div>
+
         <div class="flex-grow"></div>
 
-        <!-- 공통 수식 영역 -->
-        <div class="border-2 border-dashed border-gray-300 rounded-2xl p-4 md:p-5 flex flex-col items-center justify-center mt-auto bg-white mb-2 shadow-sm">
-            <p class="text-sm text-gray-600 font-bold mb-3" id="formula-title">부피 구하는 식 (cm³)</p>
-            <div class="flex items-center justify-center gap-1.5 w-full flex-wrap">
+        <!-- ========================================== -->
+        <!-- 토글식 공통 수식 영역 (기본/단위/1m³) -->
+        <!-- ========================================== -->
+        <div id="formula-common" class="border-2 border-dashed border-gray-300 rounded-2xl p-4 md:p-5 flex flex-col mt-auto bg-white mb-2 shadow-sm transition-all duration-300">
+            <div class="flex justify-between items-center mb-3 w-full">
+                <p class="text-sm text-gray-600 font-bold" id="formula-title">부피 구하는 식 (cm³)</p>
+                <label class="inline-flex items-center cursor-pointer">
+                    <span class="mr-2 text-xs font-bold text-gray-500">식 보이기</span>
+                    <input type="checkbox" class="sr-only peer toggle-formula-checkbox" onchange="toggleFormula(this.checked)">
+                    <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
+                </label>
+            </div>
+            
+            <div id="formula-content-common" class="hidden w-full flex flex-wrap items-center justify-center gap-1.5">
                 <div class="min-w-[2.5rem] px-2 h-12 border-[3px] border-pink-300 rounded-xl flex items-center justify-center text-pink-600 bg-pink-50 text-lg md:text-xl font-black shadow-sm" id="val-x"></div>
                 <span class="text-gray-400 text-xl font-bold">×</span>
                 <div class="min-w-[2.5rem] px-2 h-12 border-[3px] border-blue-300 rounded-xl flex items-center justify-center text-blue-600 bg-blue-50 text-lg md:text-xl font-black shadow-sm" id="val-z"></div>
@@ -141,11 +188,45 @@
                 <div class="min-w-[3.5rem] px-2 h-12 border-[3px] border-gray-300 rounded-xl flex items-center justify-center text-gray-800 bg-white text-lg md:text-xl font-black shadow-sm transition-colors" id="val-total"></div>
                 <span class="text-xs md:text-sm text-gray-700 font-bold shrink-0 mt-1" id="val-unit">(개)</span>
             </div>
+            <div id="formula-hidden-common" class="w-full flex items-center justify-center py-3">
+                <span class="text-sm font-bold text-gray-400">👀 식을 보려면 토글을 켜세요</span>
+            </div>
         </div>
+
+        <!-- ========================================== -->
+        <!-- 토글식 겉넓이 수식 영역 (겉넓이 모드 전용) -->
+        <!-- ========================================== -->
+        <div id="formula-surface" class="hidden border-2 border-dashed border-pink-300 rounded-2xl p-4 flex flex-col mt-auto bg-white mb-2 shadow-sm transition-all duration-300">
+            <div class="flex justify-between items-center mb-3 w-full">
+                <div class="flex items-center gap-2">
+                    <p class="text-sm text-pink-600 font-bold">겉넓이 식 (cm²)</p>
+                    <div class="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-bold text-gray-500 border border-gray-200" id="surf-vol-display">부피: 0 cm³</div>
+                </div>
+                <label class="inline-flex items-center cursor-pointer">
+                    <span class="mr-2 text-xs font-bold text-pink-500">식 보이기</span>
+                    <input type="checkbox" class="sr-only peer toggle-formula-checkbox" onchange="toggleFormula(this.checked)">
+                    <div class="relative w-9 h-5 bg-pink-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-pink-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-500"></div>
+                </label>
+            </div>
+            
+            <div id="formula-content-surface" class="hidden w-full">
+                <div id="surf-f1" class="hidden flex flex-wrap items-center gap-1.5 text-xs md:text-sm font-bold text-gray-600 leading-relaxed justify-center"></div>
+                <div id="surf-f2" class="hidden flex flex-wrap items-center gap-1.5 text-xs md:text-sm font-bold text-gray-600 leading-relaxed justify-center"></div>
+                <div id="surf-f3" class="hidden flex flex-wrap items-center gap-1.5 text-xs md:text-sm font-bold text-gray-600 leading-relaxed justify-center"></div>
+                <div id="surf-f4" class="hidden flex flex-wrap items-center gap-1.5 text-xs md:text-sm font-bold text-gray-600 leading-relaxed justify-center"></div>
+            </div>
+            <div id="formula-hidden-surface" class="w-full flex items-center justify-center py-3">
+                <span class="text-sm font-bold text-pink-400">👀 식을 보려면 토글을 켜세요</span>
+            </div>
+        </div>
+
     </div>
 
     <!-- 우측 3D 캔버스 -->
-    <div class="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200" id="canvas-container"></div>
+    <div class="flex-1 relative bg-gradient-to-br from-slate-100 to-slate-200" id="canvas-container">
+        <!-- 3D 위에 그려지는 HTML 라벨(숫자) 영역 -->
+        <div id="labels-overlay" class="absolute inset-0 pointer-events-none z-20 overflow-hidden" style="display: none;"></div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -168,6 +249,32 @@
         let animRequestId = null;
         let meterState = { phase: 0, x: 1, z: 1, y: 1 };
 
+        // 겉넓이 변수 및 라벨
+        let surfaceGroup = null;
+        let surfaceView = 'solid'; // 'solid' or 'net'
+        let textLabels = [];
+
+        // 공식 보이기 상태
+        let isFormulaVisible = false;
+
+        // 겉넓이 색상 정의 (3D 모델용)
+        const colorPink = 0xf472b6; // 밑면
+        const colorOrange = 0xfb923c; // 윗면 (방법 1용)
+        const colorBlue = 0x60a5fa; // 앞면
+        const colorTeal = 0x2dd4bf; // 뒷면 (방법 1용)
+        const colorGreen = 0x4ade80; // 우면
+        const colorPurple = 0xc084fc; // 옆면 통일 (방법 3용) 및 좌면 (방법 1용)
+
+        // Tailwind 클래스 매핑 (UI 수식 및 라벨용)
+        const twColors = {
+            'pink': { box: 'bg-pink-100 border-pink-300 text-pink-700', border: '#f9a8d4', text: '#be185d' },
+            'orange': { box: 'bg-orange-100 border-orange-300 text-orange-700', border: '#fdba74', text: '#c2410c' },
+            'blue': { box: 'bg-blue-100 border-blue-300 text-blue-700', border: '#93c5fd', text: '#1d4ed8' },
+            'teal': { box: 'bg-teal-100 border-teal-300 text-teal-700', border: '#5eead4', text: '#0f766e' },
+            'green': { box: 'bg-green-100 border-green-300 text-green-700', border: '#86efac', text: '#15803d' },
+            'purple': { box: 'bg-purple-100 border-purple-300 text-purple-700', border: '#d8b4fe', text: '#7e22ce' }
+        };
+
         function initThree() {
             const container = document.getElementById('canvas-container');
             scene = new THREE.Scene();
@@ -181,11 +288,12 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            // 입체도를 위한 조명
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
             hemiLight.position.set(0, 20, 0);
             scene.add(hemiLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
             dirLight.position.set(20, 30, 20);
             scene.add(dirLight);
 
@@ -196,10 +304,81 @@
             });
         }
 
+        // 수식 토글 기능
+        function toggleFormula(isChecked) {
+            isFormulaVisible = isChecked;
+            updateFormulaVisibility();
+        }
+
+        function updateFormulaVisibility() {
+            // 체크박스 UI 상태 동기화
+            document.querySelectorAll('.toggle-formula-checkbox').forEach(cb => {
+                cb.checked = isFormulaVisible;
+            });
+
+            // 공통 (기본/단위/1m³) 수식 컨테이너
+            const commonContent = document.getElementById('formula-content-common');
+            const commonHidden = document.getElementById('formula-hidden-common');
+            if (commonContent && commonHidden) {
+                if (isFormulaVisible) {
+                    commonContent.classList.remove('hidden');
+                    commonHidden.classList.add('hidden');
+                } else {
+                    commonContent.classList.add('hidden');
+                    commonHidden.classList.remove('hidden');
+                }
+            }
+
+            // 겉넓이 수식 컨테이너
+            const surfContent = document.getElementById('formula-content-surface');
+            const surfHidden = document.getElementById('formula-hidden-surface');
+            if (surfContent && surfHidden) {
+                if (isFormulaVisible) {
+                    surfContent.classList.remove('hidden');
+                    surfHidden.classList.add('hidden');
+                } else {
+                    surfContent.classList.add('hidden');
+                    surfHidden.classList.remove('hidden');
+                }
+            }
+
+            // 3D 뷰 위 라벨(숫자)도 수식과 함께 숨김/표시 연동
+            const labelsOverlay = document.getElementById('labels-overlay');
+            if (labelsOverlay) {
+                labelsOverlay.style.display = isFormulaVisible ? 'block' : 'none';
+            }
+        }
+
+        // 3D 뷰 위에 숫자/글자를 띄우는 헬퍼 함수
+        function addLabel(pos, text, colorType) {
+            const c = twColors[colorType] || twColors['pink'];
+            const el = document.createElement('div');
+            el.style.position = 'absolute';
+            el.style.padding = '3px 8px';
+            el.style.borderRadius = '6px';
+            el.style.fontSize = '14px';
+            el.style.fontWeight = '900';
+            el.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            el.style.border = `2px solid ${c.border}`;
+            el.style.color = c.text;
+            el.style.transform = 'translate(-50%, -50%)';
+            el.style.whiteSpace = 'nowrap';
+            el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            el.style.transition = 'opacity 0.2s';
+            el.textContent = text;
+            document.getElementById('labels-overlay').appendChild(el);
+            textLabels.push({ pos: pos, el: el });
+        }
+
         function clearScene() {
             if (animRequestId) cancelAnimationFrame(animRequestId);
             if (isPlaying) togglePlay();
             
+            // 라벨 지우기
+            const overlay = document.getElementById('labels-overlay');
+            if (overlay) overlay.innerHTML = '';
+            textLabels = [];
+
             blocks.forEach(b => {
                 b.geometry.dispose();
                 if(Array.isArray(b.material)) b.material.forEach(m=>m.dispose());
@@ -210,6 +389,7 @@
             
             if (wireframeBox) { scene.remove(wireframeBox); wireframeBox = null; }
             if (meterAnimGroup) { scene.remove(meterAnimGroup); meterAnimGroup = null; }
+            
             if (singleMesh) {
                 singleMesh.geometry.dispose();
                 if(Array.isArray(singleMesh.material)) singleMesh.material.forEach(m=>m.dispose());
@@ -225,9 +405,20 @@
                         child.material.dispose();
                     });
                 }
-                
                 scene.remove(singleMesh);
                 singleMesh = null;
+            }
+
+            if (surfaceGroup) {
+                surfaceGroup.children.forEach(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                });
+                scene.remove(surfaceGroup);
+                surfaceGroup = null;
             }
             
             document.getElementById('val-x').textContent = '';
@@ -238,7 +429,7 @@
         }
 
         // ==========================================
-        // 1. 기본 쌓기 모드 (낱개)
+        // 1. 기본 쌓기 모드
         // ==========================================
         function initNormalBox() {
             clearScene();
@@ -273,37 +464,25 @@
                     for (let d = 0; d < size.d; d++) {
                         for (let x = 0; x < size.w; x++) {
                             let z = size.d - 1 - d;
-                            
-                            // 색상 로직 복구
                             let mats = [];
                             for(let i=0; i<6; i++) {
-                                mats.push(new THREE.MeshLambertMaterial({ color: 0xeec68b })); // 기본 나무색
+                                mats.push(new THREE.MeshLambertMaterial({ color: 0xeec68b }));
                             }
 
-                            // 1. 가로선: 1층 맨 앞줄
-                            if (y === 0 && d === 0) {
-                                mats.forEach(m => m.color.setHex(0xf4a6a6)); // 핑크
-                            }
-
-                            // 2. 세로선: 1층 맨 우측줄
+                            if (y === 0 && d === 0) mats.forEach(m => m.color.setHex(colorPink));
                             if (y === 0 && x === size.w - 1) {
                                 if (d === 0) {
-                                    mats[0].color.setHex(0x8cb6f0); // 우측면 파랑
-                                    mats[5].color.setHex(0x8cb6f0); // 뒷면 파랑
+                                    mats[0].color.setHex(colorBlue); mats[5].color.setHex(colorBlue);
                                 } else {
-                                    mats.forEach(m => m.color.setHex(0x8cb6f0)); // 파랑
+                                    mats.forEach(m => m.color.setHex(colorBlue));
                                 }
                             }
-
-                            // 3. 높이선: 맨 우측 맨 뒷줄 기둥
                             if (x === size.w - 1 && d === size.d - 1) {
                                 if (y > 0) {
-                                    mats.forEach(m => m.color.setHex(0x82c8a0)); // 초록
+                                    mats.forEach(m => m.color.setHex(colorGreen));
                                 } else {
-                                    mats[5].color.setHex(0x82c8a0); // 뒷면은 초록
-                                    if (size.d === 1) {
-                                        mats[0].color.setHex(0x82c8a0); // 세로가 1칸뿐이면 우측면도 초록
-                                    }
+                                    mats[5].color.setHex(colorGreen);
+                                    if (size.d === 1) mats[0].color.setHex(colorGreen);
                                 }
                             }
 
@@ -317,7 +496,7 @@
                     }
                 }
             } else {
-                alert("기본 모드에서는 브라우저 성능을 위해 총합 10,000개 이하까지만 권장합니다. 큰 치수는 '단위 변환(조각)' 모드를 사용하세요.");
+                alert("기본 모드에서는 10,000개 이하까지만 권장합니다.");
             }
 
             const maxDim = Math.max(size.w, size.d, size.h);
@@ -339,253 +518,107 @@
             document.getElementById('val-y').textContent = dy;
             document.getElementById('val-total').textContent = currentCount > 0 ? currentCount.toLocaleString() : '';
         }
-
         function renderBlocksVisible() {
-            for (let i = 0; i < blocks.length; i++) {
-                blocks[i].visible = i < currentCount;
-            }
+            for (let i = 0; i < blocks.length; i++) blocks[i].visible = i < currentCount;
         }
-
         function addBlocks() {
             const mode = document.querySelector('input[name="build-mode"]:checked').value;
             const total = size.w * size.d * size.h;
-            
             if (currentCount >= total) return; 
-
-            if (mode === 'single') {
-                currentCount += 1;
-            } else if (mode === 'row') {
-                const remainder = currentCount % size.w;
-                if (remainder === 0) currentCount += size.w;
-                else currentCount += (size.w - remainder);
-            } else if (mode === 'layer') {
-                const layerSize = size.w * size.d;
-                const remainder = currentCount % layerSize;
-                if (remainder === 0) currentCount += layerSize;
-                else currentCount += (layerSize - remainder); 
-            } else if (mode === 'all') {
-                currentCount = total;
-            }
-
+            if (mode === 'single') currentCount += 1;
+            else if (mode === 'row') currentCount += (currentCount % size.w === 0 ? size.w : size.w - (currentCount % size.w));
+            else if (mode === 'layer') { const ls = size.w * size.d; currentCount += (currentCount % ls === 0 ? ls : ls - (currentCount % ls)); }
+            else if (mode === 'all') currentCount = total;
             if (currentCount > total) currentCount = total;
-            renderBlocksVisible();
-            updateNormalUI();
+            renderBlocksVisible(); updateNormalUI();
         }
-
         function removeBlocks() {
             const mode = document.querySelector('input[name="build-mode"]:checked').value;
-            
             if (currentCount <= 0) return;
-
-            if (mode === 'single') {
-                currentCount -= 1;
-            } else if (mode === 'row') {
-                const remainder = currentCount % size.w;
-                if (remainder === 0) currentCount -= size.w;
-                else currentCount -= remainder;
-            } else if (mode === 'layer') {
-                const layerSize = size.w * size.d;
-                const remainder = currentCount % layerSize;
-                if (remainder === 0) currentCount -= layerSize;
-                else currentCount -= remainder;
-            } else if (mode === 'all') {
-                currentCount = 0;
-            }
-
+            if (mode === 'single') currentCount -= 1;
+            else if (mode === 'row') currentCount -= (currentCount % size.w === 0 ? size.w : currentCount % size.w);
+            else if (mode === 'layer') { const ls = size.w * size.d; currentCount -= (currentCount % ls === 0 ? ls : currentCount % ls); }
+            else if (mode === 'all') currentCount = 0;
             if (currentCount < 0) currentCount = 0;
-            renderBlocksVisible();
-            updateNormalUI();
+            renderBlocksVisible(); updateNormalUI();
         }
-
         function togglePlay() {
             isPlaying = !isPlaying;
             const btn = document.getElementById('btn-play');
             const total = size.w * size.d * size.h;
-
             if (isPlaying) {
-                if (currentCount >= total) {
-                    currentCount = 0;
-                    renderBlocksVisible();
-                    updateNormalUI();
-                }
-
-                btn.innerHTML = '⏸ 정지';
-                btn.classList.replace('bg-[#54B681]', 'bg-amber-500');
-                btn.classList.replace('hover:bg-emerald-600', 'hover:bg-amber-600');
-                
+                if (currentCount >= total) { currentCount = 0; renderBlocksVisible(); updateNormalUI(); }
+                btn.innerHTML = '⏸ 정지'; btn.classList.replace('bg-[#54B681]', 'bg-amber-500'); btn.classList.replace('hover:bg-emerald-600', 'hover:bg-amber-600');
                 const mode = document.querySelector('input[name="build-mode"]:checked').value;
-                let speed = 250;
-                if (mode === 'row') speed = 500;
-                if (mode === 'layer') speed = 800;
-                if (mode === 'all') speed = 1000;
-
+                let speed = mode === 'row' ? 500 : mode === 'layer' ? 800 : mode === 'all' ? 1000 : 250;
                 playInterval = setInterval(() => {
-                    if (currentCount >= total) {
-                        togglePlay(); 
-                        return;
-                    }
+                    if (currentCount >= total) { togglePlay(); return; }
                     addBlocks();
                 }, speed);
             } else {
-                btn.innerHTML = '▶ 자동 쌓기';
-                btn.classList.replace('bg-amber-500', 'bg-[#54B681]');
-                btn.classList.replace('hover:bg-amber-600', 'hover:bg-emerald-600');
+                btn.innerHTML = '▶ 자동 쌓기'; btn.classList.replace('bg-amber-500', 'bg-[#54B681]'); btn.classList.replace('hover:bg-amber-600', 'hover:bg-emerald-600');
                 clearInterval(playInterval);
             }
         }
 
         // ==========================================
-        // 2. 하나의 조각 (단위 변환 / 1m³ 그리드 선)
+        // 2. 하나의 조각 모드
         // ==========================================
         function initSingleBox() {
             clearScene();
-            
             const w = Math.max(1, parseInt(document.getElementById('single-w').value) || 200);
             const d = Math.max(1, parseInt(document.getElementById('single-d').value) || 30);
             const h = Math.max(1, parseInt(document.getElementById('single-h').value) || 50);
-            
-            document.getElementById('single-w').value = w;
-            document.getElementById('single-d').value = d;
-            document.getElementById('single-h').value = h;
+            document.getElementById('single-w').value = w; document.getElementById('single-d').value = d; document.getElementById('single-h').value = h;
             
             const boxGeo = new THREE.BoxGeometry(w, h, d);
             let mats = [
-                new THREE.MeshLambertMaterial({ color: 0x8cb6f0 }), 
-                new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
-                new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
-                new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
-                new THREE.MeshLambertMaterial({ color: 0xf4a6a6 }), 
-                new THREE.MeshLambertMaterial({ color: 0x82c8a0 }), 
+                new THREE.MeshLambertMaterial({ color: colorBlue }), new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
+                new THREE.MeshLambertMaterial({ color: 0xeec68b }), new THREE.MeshLambertMaterial({ color: 0xeec68b }), 
+                new THREE.MeshLambertMaterial({ color: colorPink }), new THREE.MeshLambertMaterial({ color: colorGreen }), 
             ];
-            
             singleMesh = new THREE.Mesh(boxGeo, mats);
             
-            const getIntervals = (max, step) => {
-                let res = [];
-                for(let i=0; i<=max; i+=step) res.push(i);
-                if (Math.abs(res[res.length-1] - max) > 0.001) res.push(max);
-                return res;
-            };
-
-            const hw = w / 2, hh = h / 2, hd = d / 2;
-            const points = [];
-
+            const getIntervals = (max, step) => { let res = []; for(let i=0; i<=max; i+=step) res.push(i); if (Math.abs(res[res.length-1] - max) > 0.001) res.push(max); return res; };
+            const hw = w / 2, hh = h / 2, hd = d / 2; const points = [];
             if (w <= 1000 && h <= 1000 && d <= 1000) {
-                const xVals1 = getIntervals(w, 1);
-                const yVals1 = getIntervals(h, 1);
-                const zVals1 = getIntervals(d, 1);
-
-                xVals1.forEach(x => {
-                    points.push(new THREE.Vector3(x - hw, -hh, hd), new THREE.Vector3(x - hw, hh, hd));
-                    points.push(new THREE.Vector3(x - hw, -hh, -hd), new THREE.Vector3(x - hw, hh, -hd));
-                    points.push(new THREE.Vector3(x - hw, hh, -hd), new THREE.Vector3(x - hw, hh, hd));
-                    points.push(new THREE.Vector3(x - hw, -hh, -hd), new THREE.Vector3(x - hw, -hh, hd));
-                });
-                yVals1.forEach(y => {
-                    points.push(new THREE.Vector3(-hw, y - hh, hd), new THREE.Vector3(hw, y - hh, hd));
-                    points.push(new THREE.Vector3(-hw, y - hh, -hd), new THREE.Vector3(hw, y - hh, -hd));
-                    points.push(new THREE.Vector3(hw, y - hh, -hd), new THREE.Vector3(hw, y - hh, hd));
-                    points.push(new THREE.Vector3(-hw, y - hh, -hd), new THREE.Vector3(-hw, y - hh, hd));
-                });
-                zVals1.forEach(z => {
-                    points.push(new THREE.Vector3(-hw, hh, hd - z), new THREE.Vector3(hw, hh, hd - z));
-                    points.push(new THREE.Vector3(-hw, -hh, hd - z), new THREE.Vector3(hw, -hh, hd - z));
-                    points.push(new THREE.Vector3(hw, -hh, hd - z), new THREE.Vector3(hw, hh, hd - z));
-                    points.push(new THREE.Vector3(-hw, -hh, hd - z), new THREE.Vector3(-hw, hh, hd - z));
-                });
+                const xVals1 = getIntervals(w, 1); const yVals1 = getIntervals(h, 1); const zVals1 = getIntervals(d, 1);
+                xVals1.forEach(x => { points.push(new THREE.Vector3(x - hw, -hh, hd), new THREE.Vector3(x - hw, hh, hd)); points.push(new THREE.Vector3(x - hw, -hh, -hd), new THREE.Vector3(x - hw, hh, -hd)); points.push(new THREE.Vector3(x - hw, hh, -hd), new THREE.Vector3(x - hw, hh, hd)); points.push(new THREE.Vector3(x - hw, -hh, -hd), new THREE.Vector3(x - hw, -hh, hd)); });
+                yVals1.forEach(y => { points.push(new THREE.Vector3(-hw, y - hh, hd), new THREE.Vector3(hw, y - hh, hd)); points.push(new THREE.Vector3(-hw, y - hh, -hd), new THREE.Vector3(hw, y - hh, -hd)); points.push(new THREE.Vector3(hw, y - hh, -hd), new THREE.Vector3(hw, y - hh, hd)); points.push(new THREE.Vector3(-hw, y - hh, -hd), new THREE.Vector3(-hw, y - hh, hd)); });
+                zVals1.forEach(z => { points.push(new THREE.Vector3(-hw, hh, hd - z), new THREE.Vector3(hw, hh, hd - z)); points.push(new THREE.Vector3(-hw, -hh, hd - z), new THREE.Vector3(hw, -hh, hd - z)); points.push(new THREE.Vector3(hw, -hh, hd - z), new THREE.Vector3(hw, hh, hd - z)); points.push(new THREE.Vector3(-hw, -hh, hd - z), new THREE.Vector3(-hw, hh, hd - z)); });
             } else {
-                const edges = new THREE.EdgesGeometry(boxGeo);
-                const pts = edges.attributes.position.array;
-                for(let i=0; i<pts.length; i+=3) {
-                    points.push(new THREE.Vector3(pts[i], pts[i+1], pts[i+2]));
-                }
+                const edges = new THREE.EdgesGeometry(boxGeo); const pts = edges.attributes.position.array;
+                for(let i=0; i<pts.length; i+=3) points.push(new THREE.Vector3(pts[i], pts[i+1], pts[i+2]));
             }
-
             const thinGeo = new THREE.BufferGeometry().setFromPoints(points);
-            const normalEdges = new THREE.LineSegments(
-                thinGeo,
-                new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 })
-            );
+            const normalEdges = new THREE.LineSegments(thinGeo, new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 }));
             singleMesh.add(normalEdges);
             
             const thickEdges = new THREE.Group();
-            const t = Math.max(0.5, Math.max(w, d, h) * 0.008); 
-            const thickMat = new THREE.MeshBasicMaterial({ color: 0x1e1b4b }); 
-            
-            const xVals100 = getIntervals(w, 100);
-            const yVals100 = getIntervals(h, 100);
-            const zVals100 = getIntervals(d, 100);
-
-            yVals100.forEach(y => {
-                zVals100.forEach(z => {
-                    const edgeGeo = new THREE.BoxGeometry(w + t, t, t);
-                    const edgeMesh = new THREE.Mesh(edgeGeo, thickMat);
-                    edgeMesh.position.set(0, y - h/2, d/2 - z);
-                    thickEdges.add(edgeMesh);
-                });
-            });
-
-            xVals100.forEach(x => {
-                zVals100.forEach(z => {
-                    const edgeGeo = new THREE.BoxGeometry(t, h + t, t);
-                    const edgeMesh = new THREE.Mesh(edgeGeo, thickMat);
-                    edgeMesh.position.set(x - w/2, 0, d/2 - z);
-                    thickEdges.add(edgeMesh);
-                });
-            });
-
-            xVals100.forEach(x => {
-                yVals100.forEach(y => {
-                    const edgeGeo = new THREE.BoxGeometry(t, t, d + t);
-                    const edgeMesh = new THREE.Mesh(edgeGeo, thickMat);
-                    edgeMesh.position.set(x - w/2, y - h/2, 0);
-                    thickEdges.add(edgeMesh);
-                });
-            });
-
+            const t = Math.max(0.5, Math.max(w, d, h) * 0.008); const thickMat = new THREE.MeshBasicMaterial({ color: 0x1e1b4b }); 
+            const xVals100 = getIntervals(w, 100); const yVals100 = getIntervals(h, 100); const zVals100 = getIntervals(d, 100);
+            yVals100.forEach(y => { zVals100.forEach(z => { const edgeMesh = new THREE.Mesh(new THREE.BoxGeometry(w + t, t, t), thickMat); edgeMesh.position.set(0, y - h/2, d/2 - z); thickEdges.add(edgeMesh); }); });
+            xVals100.forEach(x => { zVals100.forEach(z => { const edgeMesh = new THREE.Mesh(new THREE.BoxGeometry(t, h + t, t), thickMat); edgeMesh.position.set(x - w/2, 0, d/2 - z); thickEdges.add(edgeMesh); }); });
+            xVals100.forEach(x => { yVals100.forEach(y => { const edgeMesh = new THREE.Mesh(new THREE.BoxGeometry(t, t, d + t), thickMat); edgeMesh.position.set(x - w/2, y - h/2, 0); thickEdges.add(edgeMesh); }); });
             singleMesh.add(thickEdges);
-            
-            singleMesh.userData.normalEdges = normalEdges;
-            singleMesh.userData.thickEdges = thickEdges;
-            
-            if (viewUnit === 'cm') {
-                normalEdges.visible = true;
-                thickEdges.visible = false;
-            } else {
-                normalEdges.visible = true;
-                thickEdges.visible = true;
-            }
-            
+            singleMesh.userData.normalEdges = normalEdges; singleMesh.userData.thickEdges = thickEdges;
+            if (viewUnit === 'cm') { normalEdges.visible = true; thickEdges.visible = false; } else { normalEdges.visible = true; thickEdges.visible = true; }
             scene.add(singleMesh);
 
-            const maxDim = Math.max(w, d, h);
-            camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 2.0);
-            controls.target.set(0, 0, 0);
-
+            const maxDim = Math.max(w, d, h); camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 2.0); controls.target.set(0, 0, 0);
             updateSingleUI(w, d, h);
         }
 
         function updateSingleUI(w, d, h) {
-            const cleanNum = (num) => Number(num.toFixed(6));
-            let valX, valZ, valY, total;
-
+            const cleanNum = (num) => Number(num.toFixed(6)); let valX, valZ, valY, total;
             if (viewUnit === 'cm') {
-                document.getElementById('formula-title').textContent = "부피 구하는 식 (cm³ 단위)";
-                document.getElementById('val-unit').textContent = "(cm³)";
-                valX = w; valZ = d; valY = h;
-                total = cleanNum(w * d * h);
+                document.getElementById('formula-title').textContent = "부피 구하는 식 (cm³ 단위)"; document.getElementById('val-unit').textContent = "(cm³)";
+                valX = w; valZ = d; valY = h; total = cleanNum(w * d * h);
             } else {
-                document.getElementById('formula-title').textContent = "부피 구하는 식 (m³ 단위 변환)";
-                document.getElementById('val-unit').textContent = "(m³)";
-                valX = cleanNum(w / 100);
-                valZ = cleanNum(d / 100);
-                valY = cleanNum(h / 100);
-                total = cleanNum(valX * valZ * valY);
+                document.getElementById('formula-title').textContent = "부피 구하는 식 (m³ 단위 변환)"; document.getElementById('val-unit').textContent = "(m³)";
+                valX = cleanNum(w / 100); valZ = cleanNum(d / 100); valY = cleanNum(h / 100); total = cleanNum(valX * valZ * valY);
             }
-
-            document.getElementById('val-x').textContent = valX;
-            document.getElementById('val-z').textContent = valZ;
-            document.getElementById('val-y').textContent = valY;
+            document.getElementById('val-x').textContent = valX; document.getElementById('val-z').textContent = valZ; document.getElementById('val-y').textContent = valY;
             document.getElementById('val-total').textContent = total.toLocaleString('ko-KR', {maximumFractionDigits: 6});
         }
 
@@ -593,202 +626,393 @@
         // 3. 1m³ 애니메이션 모드
         // ==========================================
         function initMeterBox() {
-            clearScene();
-            meterState = { phase: 0, x: 1, z: 1, y: 1 };
-            
-            document.getElementById('formula-title').textContent = "1m³ 채우는 과정 (총 개수)";
-            document.getElementById('val-unit').textContent = "(개)";
+            clearScene(); meterState = { phase: 0, x: 1, z: 1, y: 1 };
+            document.getElementById('formula-title').textContent = "1m³ 채우는 과정 (총 개수)"; document.getElementById('val-unit').textContent = "(개)";
             updateMeterUI();
-
             meterAnimGroup = new THREE.Group();
-            
             const outerGeo = new THREE.BoxGeometry(100, 100, 100);
             const wireframe = new THREE.LineSegments(new THREE.EdgesGeometry(outerGeo), new THREE.LineBasicMaterial({ color: 0x6366f1, opacity: 0.5, transparent: true }));
             const faces = new THREE.Mesh(outerGeo, new THREE.MeshBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false }));
-            meterAnimGroup.add(wireframe);
-            meterAnimGroup.add(faces);
-
+            meterAnimGroup.add(wireframe); meterAnimGroup.add(faces);
             const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-            let mats = [
-                new THREE.MeshLambertMaterial({ color: 0x8cb6f0 }),
-                new THREE.MeshLambertMaterial({ color: 0x60a5fa }),
-                new THREE.MeshLambertMaterial({ color: 0x82c8a0 }),
-                new THREE.MeshLambertMaterial({ color: 0x4ade80 }),
-                new THREE.MeshLambertMaterial({ color: 0xf4a6a6 }),
-                new THREE.MeshLambertMaterial({ color: 0xf87171 }),
-            ];
+            let mats = [ new THREE.MeshLambertMaterial({ color: 0x8cb6f0 }), new THREE.MeshLambertMaterial({ color: 0x60a5fa }), new THREE.MeshLambertMaterial({ color: 0x82c8a0 }), new THREE.MeshLambertMaterial({ color: 0x4ade80 }), new THREE.MeshLambertMaterial({ color: 0xf4a6a6 }), new THREE.MeshLambertMaterial({ color: 0xf87171 }) ];
             meterBlock = new THREE.Mesh(boxGeo, mats);
             meterBlock.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeo), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3 })));
-
-            meterAnimGroup.add(meterBlock);
-            scene.add(meterAnimGroup);
-
-            updateMeterBlockTransform();
-            camera.position.set(150, 120, 200);
-            controls.target.set(0, 0, 0);
+            meterAnimGroup.add(meterBlock); scene.add(meterAnimGroup);
+            updateMeterBlockTransform(); camera.position.set(150, 120, 200); controls.target.set(0, 0, 0);
         }
 
         function updateMeterBlockTransform() {
-            if(!meterBlock) return;
-            meterBlock.scale.set(meterState.x, meterState.y, meterState.z);
-            const startX = -50, startY = -50, startZ = 50; 
-            meterBlock.position.set(startX + (meterState.x / 2), startY + (meterState.y / 2), startZ - (meterState.z / 2));
+            if(!meterBlock) return; meterBlock.scale.set(meterState.x, meterState.y, meterState.z);
+            meterBlock.position.set(-50 + (meterState.x / 2), -50 + (meterState.y / 2), 50 - (meterState.z / 2));
         }
 
         function updateMeterUI() {
-            document.getElementById('val-x').textContent = Math.floor(meterState.x);
-            document.getElementById('val-z').textContent = Math.floor(meterState.z);
-            document.getElementById('val-y').textContent = Math.floor(meterState.y);
-            
-            const total = Math.floor(meterState.x) * Math.floor(meterState.z) * Math.floor(meterState.y);
-            document.getElementById('val-total').textContent = total.toLocaleString();
-
-            if(total === 1000000) document.getElementById('val-total').classList.add('bg-indigo-100', 'text-indigo-800');
-            else document.getElementById('val-total').classList.remove('bg-indigo-100', 'text-indigo-800');
+            document.getElementById('val-x').textContent = Math.floor(meterState.x); document.getElementById('val-z').textContent = Math.floor(meterState.z); document.getElementById('val-y').textContent = Math.floor(meterState.y);
+            const total = Math.floor(meterState.x) * Math.floor(meterState.z) * Math.floor(meterState.y); document.getElementById('val-total').textContent = total.toLocaleString();
+            if(total === 1000000) document.getElementById('val-total').classList.add('bg-indigo-100', 'text-indigo-800'); else document.getElementById('val-total').classList.remove('bg-indigo-100', 'text-indigo-800');
         }
 
         function playMeterAnimation() {
-            if(meterState.phase !== 0) return;
-            meterState = { phase: 1, x: 1, z: 1, y: 1 };
-
+            if(meterState.phase !== 0) return; meterState = { phase: 1, x: 1, z: 1, y: 1 };
             function animateLoop() {
                 const speed = parseFloat(document.getElementById('meter-speed').value) || 1.0;
-
-                if(meterState.phase === 1) {
-                    meterState.x += speed;
-                    if(meterState.x >= 100) { meterState.x = 100; meterState.phase = 2; }
-                } else if(meterState.phase === 2) {
-                    meterState.z += speed;
-                    if(meterState.z >= 100) { meterState.z = 100; meterState.phase = 3; }
-                } else if(meterState.phase === 3) {
-                    meterState.y += speed;
-                    if(meterState.y >= 100) { meterState.y = 100; meterState.phase = 4; }
-                }
-
-                updateMeterBlockTransform();
-                updateMeterUI();
-
-                if(meterState.phase < 4) {
-                    animRequestId = requestAnimationFrame(animateLoop);
-                } else {
-                    meterState.phase = 0;
-                    document.getElementById('btn-play-meter').textContent = "🔄 1m³ 채우기 완료 (다시 보기)";
-                }
+                if(meterState.phase === 1) { meterState.x += speed; if(meterState.x >= 100) { meterState.x = 100; meterState.phase = 2; } } 
+                else if(meterState.phase === 2) { meterState.z += speed; if(meterState.z >= 100) { meterState.z = 100; meterState.phase = 3; } } 
+                else if(meterState.phase === 3) { meterState.y += speed; if(meterState.y >= 100) { meterState.y = 100; meterState.phase = 4; } }
+                updateMeterBlockTransform(); updateMeterUI();
+                if(meterState.phase < 4) animRequestId = requestAnimationFrame(animateLoop); else { meterState.phase = 0; document.getElementById('btn-play-meter').textContent = "🔄 1m³ 채우기 완료 (다시 보기)"; }
             }
-            document.getElementById('btn-play-meter').textContent = "⏳ 채우는 중...";
-            animateLoop();
+            document.getElementById('btn-play-meter').textContent = "⏳ 채우는 중..."; animateLoop();
+        }
+
+        // ==========================================
+        // 4. 겉넓이 구하기 모드 (덩어리 전개도 지원)
+        // ==========================================
+        function initSurfaceBox() {
+            clearScene();
+            
+            const w = Math.max(1, parseInt(document.getElementById('surf-w').value) || 6);
+            const d = Math.max(1, parseInt(document.getElementById('surf-d').value) || 4);
+            const h = Math.max(1, parseInt(document.getElementById('surf-h').value) || 5);
+            
+            document.getElementById('surf-w').value = w;
+            document.getElementById('surf-d').value = d;
+            document.getElementById('surf-h').value = h;
+
+            const methodSelect = document.getElementById('surf-method');
+            let method = methodSelect.value;
+
+            if (w === d && d === h) {
+                document.getElementById('surf-method-cube').disabled = false;
+            } else {
+                if(method === "4") { method = "1"; methodSelect.value = "1"; }
+                document.getElementById('surf-method-cube').disabled = true;
+            }
+
+            // 구하는 방법에 따라 6개 면의 색상과 타입 지정
+            let hexRight, hexLeft, hexTop, hexBottom, hexFront, hexBack;
+            let typeRight, typeLeft, typeTop, typeBottom, typeFront, typeBack;
+
+            if (method === "1") {
+                hexBottom = colorPink; typeBottom = 'pink';
+                hexTop = colorOrange; typeTop = 'orange';
+                hexFront = colorBlue; typeFront = 'blue';
+                hexBack = colorTeal; typeBack = 'teal';
+                hexRight = colorGreen; typeRight = 'green';
+                hexLeft = colorPurple; typeLeft = 'purple';
+            } else if (method === "4") {
+                hexBottom = hexTop = hexFront = hexBack = hexRight = hexLeft = colorPink;
+                typeBottom = typeTop = typeFront = typeBack = typeRight = typeLeft = 'pink';
+            } else if (method === "3") {
+                // 방법 3: 옆면들을 보라색 하나로 통일하여 덩어리 강조
+                hexBottom = hexTop = colorPink; typeBottom = typeTop = 'pink';
+                hexFront = hexBack = hexRight = hexLeft = colorPurple; 
+                typeFront = typeBack = typeRight = typeLeft = 'purple';
+            } else {
+                // 방법 2
+                hexBottom = hexTop = colorPink; typeBottom = typeTop = 'pink';
+                hexFront = hexBack = colorBlue; typeFront = typeBack = 'blue';
+                hexRight = hexLeft = colorGreen; typeRight = typeLeft = 'green';
+            }
+
+            surfaceGroup = new THREE.Group();
+            
+            let matRight, matLeft, matTop, matBottom, matFront, matBack;
+            if (surfaceView === 'solid') {
+                matRight = new THREE.MeshLambertMaterial({ color: hexRight });
+                matLeft = new THREE.MeshLambertMaterial({ color: hexLeft });
+                matTop = new THREE.MeshLambertMaterial({ color: hexTop });
+                matBottom = new THREE.MeshLambertMaterial({ color: hexBottom });
+                matFront = new THREE.MeshLambertMaterial({ color: hexFront });
+                matBack = new THREE.MeshLambertMaterial({ color: hexBack });
+            } else {
+                matRight = new THREE.MeshBasicMaterial({ color: hexRight, side: THREE.DoubleSide });
+                matLeft = new THREE.MeshBasicMaterial({ color: hexLeft, side: THREE.DoubleSide });
+                matTop = new THREE.MeshBasicMaterial({ color: hexTop, side: THREE.DoubleSide });
+                matBottom = new THREE.MeshBasicMaterial({ color: hexBottom, side: THREE.DoubleSide });
+                matFront = new THREE.MeshBasicMaterial({ color: hexFront, side: THREE.DoubleSide });
+                matBack = new THREE.MeshBasicMaterial({ color: hexBack, side: THREE.DoubleSide });
+            }
+
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 });
+
+            if (surfaceView === 'solid') {
+                const boxGeo = new THREE.BoxGeometry(w, h, d);
+                const mats = [matRight, matLeft, matTop, matBottom, matFront, matBack]; 
+                const mesh = new THREE.Mesh(boxGeo, mats);
+                mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeo), lineMat));
+                surfaceGroup.add(mesh);
+
+                addLabel(new THREE.Vector3(0, -h/2 - 0.5, d/2 + 0.5), `가로 ${w}`, typeBottom);
+                addLabel(new THREE.Vector3(w/2 + 0.5, -h/2 - 0.5, 0), `세로 ${d}`, typeRight);
+                addLabel(new THREE.Vector3(w/2 + 0.5, 0, d/2 + 0.5), `높이 ${h}`, typeFront);
+
+            } else {
+                let planeSettings = [];
+
+                if (method === '3') {
+                    // 방법 3: 옆면 4개를 모두 합친 거대한 1개의 직사각형 덩어리 전개도
+                    const sideW = w + d + w + d; // 옆면의 전체 너비
+                    planeSettings = [
+                        // 거대한 옆면 (보라색 하나로 통일됨)
+                        { w: sideW, h: h, mat: matFront, type: typeFront, x: 0, y: 0, text: `(${w} + ${d} + ${w} + ${d}) × ${h}` }, 
+                        // 윗면, 밑면을 앞면(w)의 위아래에 위치시키기 (거대 옆면 안에서 앞면의 중심을 찾아 배치)
+                        { w: w, h: d, mat: matBottom, type: typeBottom, x: -(sideW/2) + w/2, y: -h/2 - d/2, text: `${w} × ${d}` }, // 밑면
+                        { w: w, h: d, mat: matTop, type: typeTop, x: -(sideW/2) + w/2, y: h/2 + d/2, text: `${w} × ${d}` }, // 윗면
+                    ];
+                } else {
+                    planeSettings = [
+                        { w: w, h: d, mat: matBottom, type: typeBottom, x: 0, y: 0, text: `${w} × ${d}` }, // 밑면
+                        { w: w, h: h, mat: matBack, type: typeBack, x: 0, y: d/2 + h/2, text: `${w} × ${h}` }, // 뒷면
+                        { w: w, h: d, mat: matTop, type: typeTop, x: 0, y: d/2 + h + d/2, text: `${w} × ${d}` }, // 윗면
+                        { w: w, h: h, mat: matFront, type: typeFront, x: 0, y: -d/2 - h/2, text: `${w} × ${h}` }, // 앞면
+                        { w: h, h: d, mat: matLeft, type: typeLeft, x: -w/2 - h/2, y: 0, text: `${d} × ${h}` }, // 좌면
+                        { w: h, h: d, mat: matRight, type: typeRight, x: w/2 + h/2, y: 0, text: `${d} × ${h}` }, // 우면
+                    ];
+                }
+
+                planeSettings.forEach(ps => {
+                    const planeGeo = new THREE.PlaneGeometry(ps.w, ps.h);
+                    const mesh = new THREE.Mesh(planeGeo, ps.mat);
+                    mesh.position.set(ps.x, ps.y, 0);
+                    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(planeGeo), lineMat));
+                    surfaceGroup.add(mesh);
+                    
+                    addLabel(new THREE.Vector3(ps.x, ps.y, 0), ps.text, ps.type);
+                });
+            }
+
+            scene.add(surfaceGroup);
+
+            const maxDim = Math.max(w, d, h);
+            if (surfaceView === 'solid') {
+                camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 2.0);
+            } else {
+                camera.position.set(0, 0, (w + h + d) * 1.6);
+            }
+            controls.target.set(0, 0, 0);
+
+            updateSurfaceUI(w, d, h, method);
+        }
+
+        function updateSurfaceUI(w, d, h, method) {
+            const vol = w * d * h;
+            const areaA = w * d; // 밑,위
+            const areaB = w * h; // 앞,뒤
+            const areaC = d * h; // 좌,우
+            const totalSurf = (areaA + areaB + areaC) * 2;
+
+            document.getElementById('surf-vol-display').textContent = `부피: ${vol.toLocaleString()} cm³`;
+
+            for(let i=1; i<=4; i++) {
+                document.getElementById(`surf-f${i}`).classList.add('hidden');
+            }
+
+            const getBox = (type, text) => `<div class="${twColors[type].box} border-2 px-3 py-1.5 rounded-lg shadow-sm whitespace-nowrap font-black text-sm md:text-base">${text}</div>`;
+            
+            const boxBottom = getBox(method === '1' ? 'pink' : 'pink', `${w} × ${d} = ${areaA}`);
+            const boxTop = getBox(method === '1' ? 'orange' : 'pink', `${w} × ${d} = ${areaA}`);
+            const boxFront = getBox(method === '1' ? 'blue' : 'blue', `${w} × ${h} = ${areaB}`);
+            const boxBack = getBox(method === '1' ? 'teal' : 'blue', `${w} × ${h} = ${areaB}`);
+            const boxRight = getBox(method === '1' ? 'green' : 'green', `${d} × ${h} = ${areaC}`);
+            const boxLeft = getBox(method === '1' ? 'purple' : 'green', `${d} × ${h} = ${areaC}`);
+
+            if (method === "1") {
+                const el = document.getElementById('surf-f1');
+                el.innerHTML = `
+                    ${boxBottom} <span class="text-gray-400 text-lg">+</span> ${boxTop} <span class="text-gray-400 text-lg">+</span>
+                    ${boxFront} <span class="text-gray-400 text-lg">+</span> ${boxBack} <span class="text-gray-400 text-lg">+</span>
+                    ${boxRight} <span class="text-gray-400 text-lg">+</span> ${boxLeft} 
+                    <span class="text-xl font-black text-gray-500 ml-1 mr-1">=</span> 
+                    <div class="bg-gray-800 text-white px-4 py-2 rounded-xl shadow-md text-xl font-black">${totalSurf}</div>
+                `;
+                el.classList.remove('hidden');
+            } else if (method === "2") {
+                const el = document.getElementById('surf-f2');
+                el.innerHTML = `
+                    <span class="text-2xl font-light text-gray-400">(</span>
+                    ${boxBottom} <span class="text-gray-400 text-lg">+</span> 
+                    ${boxFront} <span class="text-gray-400 text-lg">+</span> 
+                    ${boxRight}
+                    <span class="text-2xl font-light text-gray-400">)</span>
+                    <span class="text-lg font-black text-gray-500 ml-1">× 2</span>
+                    <span class="text-xl font-black text-gray-500 ml-1 mr-1">=</span> 
+                    <div class="bg-gray-800 text-white px-4 py-2 rounded-xl shadow-md text-xl font-black">${totalSurf}</div>
+                `;
+                el.classList.remove('hidden');
+            } else if (method === "3") {
+                const perimeter = (w + d + w + d);
+                const latArea = perimeter * h;
+                
+                // 옆면을 보라색 덩어리로 통일하여 표시
+                const boxLat = `
+                    <div class="bg-purple-100 border-2 border-purple-300 text-purple-700 px-3 py-1.5 rounded-xl shadow-sm whitespace-nowrap flex items-center gap-1.5 font-bold text-sm md:text-base">
+                        <span>옆면: (${w} + ${d} + ${w} + ${d}) × ${h} = ${latArea}</span>
+                    </div>`;
+                
+                const el = document.getElementById('surf-f3');
+                el.innerHTML = `
+                    <span class="text-2xl font-light text-gray-400">(</span>
+                    ${boxBottom} <span class="text-lg font-black text-gray-500">× 2</span>
+                    <span class="text-2xl font-light text-gray-400">)</span>
+                    <span class="text-xl font-black text-gray-400 ml-1 mr-1">+</span>
+                    ${boxLat}
+                    <span class="text-xl font-black text-gray-500 ml-1 mr-1">=</span> 
+                    <div class="bg-gray-800 text-white px-4 py-2 rounded-xl shadow-md text-xl font-black">${totalSurf}</div>
+                `;
+                el.classList.remove('hidden');
+            } else if (method === "4") {
+                const el = document.getElementById('surf-f4');
+                el.innerHTML = `
+                    ${boxBottom} <span class="text-lg font-black text-gray-500 ml-2">× 6</span>
+                    <span class="text-xl font-black text-gray-500 ml-2 mr-2">=</span> 
+                    <div class="bg-gray-800 text-white px-4 py-2 rounded-xl shadow-md text-xl font-black">${totalSurf}</div>
+                `;
+                el.classList.remove('hidden');
+            }
         }
 
         // ==========================================
         // 이벤트 바인딩
         // ==========================================
-        
         function switchMode(mode) {
             currentMode = mode;
-            ['normal', 'single', 'meter'].forEach(m => {
+            ['normal', 'single', 'meter', 'surface'].forEach(m => {
                 const btn = document.getElementById(`mode-${m}`);
                 const panel = document.getElementById(`${m}-controls`);
                 if (m === mode) {
-                    btn.classList.replace('bg-gray-200', 'bg-indigo-600');
-                    btn.classList.replace('text-gray-700', 'text-white');
+                    if(m === 'surface') {
+                        btn.classList.replace('bg-gray-200', 'bg-pink-600');
+                        btn.classList.replace('text-pink-600', 'text-white');
+                        btn.classList.replace('text-gray-700', 'text-white');
+                    } else {
+                        btn.classList.replace('bg-gray-200', 'bg-indigo-600');
+                        btn.classList.replace('text-gray-700', 'text-white');
+                    }
                     panel.classList.remove('hidden');
                 } else {
-                    btn.classList.replace('bg-indigo-600', 'bg-gray-200');
-                    btn.classList.replace('text-white', 'text-gray-700');
+                    if(m === 'surface') {
+                        btn.classList.replace('bg-pink-600', 'bg-gray-200');
+                        btn.classList.replace('text-white', 'text-gray-700');
+                        btn.classList.add('text-pink-600');
+                    } else {
+                        btn.classList.replace('bg-indigo-600', 'bg-gray-200');
+                        btn.classList.replace('text-white', 'text-gray-700');
+                    }
                     panel.classList.add('hidden');
                 }
             });
 
+            if(mode === 'surface') {
+                document.getElementById('formula-common').classList.add('hidden');
+                document.getElementById('formula-surface').classList.remove('hidden');
+            } else {
+                document.getElementById('formula-common').classList.remove('hidden');
+                document.getElementById('formula-surface').classList.add('hidden');
+            }
+
             if (mode === 'normal') initNormalBox();
             else if (mode === 'single') initSingleBox();
             else if (mode === 'meter') initMeterBox();
+            else if (mode === 'surface') initSurfaceBox();
+            
+            // 모드가 변경되면 토글 가시성 동기화도 한 번 더 실행
+            updateFormulaVisibility();
         }
 
         document.getElementById('mode-normal').addEventListener('click', () => switchMode('normal'));
         document.getElementById('mode-single').addEventListener('click', () => switchMode('single'));
         document.getElementById('mode-meter').addEventListener('click', () => switchMode('meter'));
+        document.getElementById('mode-surface').addEventListener('click', () => switchMode('surface'));
 
         // 기본 모드 컨트롤
-        document.getElementById('btn-create').addEventListener('click', initNormalBox);
-        document.getElementById('btn-add').addEventListener('click', () => {
-            if (blocks.length === 0) return; 
-            if (isPlaying) togglePlay();
-            addBlocks();
+        document.getElementById('btn-create').addEventListener('click', () => {
+            document.getElementById('surf-w').value = document.getElementById('input-w').value;
+            document.getElementById('surf-d').value = document.getElementById('input-d').value;
+            document.getElementById('surf-h').value = document.getElementById('input-h').value;
+            initNormalBox();
         });
-        document.getElementById('btn-remove').addEventListener('click', () => {
-            if (blocks.length === 0) return; 
-            if (isPlaying) togglePlay();
-            removeBlocks();
-        });
-        document.getElementById('btn-play').addEventListener('click', () => {
-            if (blocks.length === 0) return;
-            togglePlay();
-        });
-        document.getElementById('btn-reset').addEventListener('click', () => {
-            if (blocks.length === 0) return; 
-            if (isPlaying) togglePlay();
-            currentCount = 0;
-            renderBlocksVisible();
-            updateNormalUI();
-        });
-        
-        document.querySelectorAll('input[name="build-mode"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (isPlaying) togglePlay();
-            });
-        });
+        document.getElementById('btn-add').addEventListener('click', () => { if (blocks.length > 0) { if (isPlaying) togglePlay(); addBlocks(); }});
+        document.getElementById('btn-remove').addEventListener('click', () => { if (blocks.length > 0) { if (isPlaying) togglePlay(); removeBlocks(); }});
+        document.getElementById('btn-play').addEventListener('click', () => { if (blocks.length > 0) togglePlay(); });
+        document.getElementById('btn-reset').addEventListener('click', () => { if (blocks.length > 0) { if (isPlaying) togglePlay(); currentCount = 0; renderBlocksVisible(); updateNormalUI(); }});
+        document.querySelectorAll('input[name="build-mode"]').forEach(radio => radio.addEventListener('change', () => { if (isPlaying) togglePlay(); }));
 
-        // 하나의 조각 모드 컨트롤
+        // 조각 모드 컨트롤
         document.getElementById('btn-apply-single').addEventListener('click', initSingleBox);
-        
         document.getElementById('btn-view-cm').addEventListener('click', (e) => {
             viewUnit = 'cm';
-            e.target.classList.replace('bg-gray-200', 'bg-gray-700');
-            e.target.classList.replace('text-gray-600', 'text-white');
-            document.getElementById('btn-view-m').classList.replace('bg-gray-700', 'bg-gray-200');
-            document.getElementById('btn-view-m').classList.replace('text-white', 'text-gray-600');
-            
-            if (singleMesh && singleMesh.userData.normalEdges) {
-                singleMesh.userData.normalEdges.visible = true;
-                singleMesh.userData.thickEdges.visible = false;
-            }
-            
-            const w = parseInt(document.getElementById('single-w').value) || 0;
-            const d = parseInt(document.getElementById('single-d').value) || 0;
-            const h = parseInt(document.getElementById('single-h').value) || 0;
-            updateSingleUI(w, d, h);
+            e.target.classList.replace('bg-gray-200', 'bg-gray-700'); e.target.classList.replace('text-gray-600', 'text-white');
+            document.getElementById('btn-view-m').classList.replace('bg-gray-700', 'bg-gray-200'); document.getElementById('btn-view-m').classList.replace('text-white', 'text-gray-600');
+            if (singleMesh && singleMesh.userData.normalEdges) { singleMesh.userData.normalEdges.visible = true; singleMesh.userData.thickEdges.visible = false; }
+            updateSingleUI(parseFloat(document.getElementById('single-w').value)||0, parseFloat(document.getElementById('single-d').value)||0, parseFloat(document.getElementById('single-h').value)||0);
         });
-
         document.getElementById('btn-view-m').addEventListener('click', (e) => {
             viewUnit = 'm';
-            e.target.classList.replace('bg-gray-200', 'bg-gray-700');
-            e.target.classList.replace('text-gray-600', 'text-white');
-            document.getElementById('btn-view-cm').classList.replace('bg-gray-700', 'bg-gray-200');
-            document.getElementById('btn-view-cm').classList.replace('text-white', 'text-gray-600');
-            
-            if (singleMesh && singleMesh.userData.thickEdges) {
-                singleMesh.userData.normalEdges.visible = true; 
-                singleMesh.userData.thickEdges.visible = true;  
-            }
-            
-            const w = parseInt(document.getElementById('single-w').value) || 0;
-            const d = parseInt(document.getElementById('single-d').value) || 0;
-            const h = parseInt(document.getElementById('single-h').value) || 0;
-            updateSingleUI(w, d, h);
+            e.target.classList.replace('bg-gray-200', 'bg-gray-700'); e.target.classList.replace('text-gray-600', 'text-white');
+            document.getElementById('btn-view-cm').classList.replace('bg-gray-700', 'bg-gray-200'); document.getElementById('btn-view-cm').classList.replace('text-white', 'text-gray-600');
+            if (singleMesh && singleMesh.userData.thickEdges) { singleMesh.userData.normalEdges.visible = true; singleMesh.userData.thickEdges.visible = true; }
+            updateSingleUI(parseFloat(document.getElementById('single-w').value)||0, parseFloat(document.getElementById('single-d').value)||0, parseFloat(document.getElementById('single-h').value)||0);
         });
 
-        // 1m³ 모드 컨트롤
+        // 1m³ 컨트롤
         document.getElementById('btn-play-meter').addEventListener('click', playMeterAnimation);
+
+        // 겉넓이 컨트롤
+        ['surf-w', 'surf-d', 'surf-h'].forEach(id => {
+            document.getElementById(id).addEventListener('change', initSurfaceBox);
+        });
+        document.getElementById('surf-method').addEventListener('change', initSurfaceBox); 
+        
+        document.getElementById('btn-surf-solid').addEventListener('click', (e) => {
+            surfaceView = 'solid';
+            e.target.classList.replace('bg-white', 'bg-pink-600'); e.target.classList.replace('text-pink-600', 'text-white'); e.target.classList.remove('border', 'border-pink-300');
+            const netBtn = document.getElementById('btn-surf-net');
+            netBtn.classList.replace('bg-pink-600', 'bg-white'); netBtn.classList.replace('text-white', 'text-pink-600'); netBtn.classList.add('border', 'border-pink-300');
+            initSurfaceBox();
+        });
+        
+        document.getElementById('btn-surf-net').addEventListener('click', (e) => {
+            surfaceView = 'net';
+            e.target.classList.replace('bg-white', 'bg-pink-600'); e.target.classList.replace('text-pink-600', 'text-white'); e.target.classList.remove('border', 'border-pink-300');
+            const solidBtn = document.getElementById('btn-surf-solid');
+            solidBtn.classList.replace('bg-pink-600', 'bg-white'); solidBtn.classList.replace('text-white', 'text-pink-600'); solidBtn.classList.add('border', 'border-pink-300');
+            initSurfaceBox();
+        });
 
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
             renderer.render(scene, camera);
+
+            // 3D 좌표를 2D 화면 좌표로 변환하여 HTML 라벨(숫자) 위치 실시간 동기화
+            if (textLabels.length > 0) {
+                const canvas = renderer.domElement;
+                const rect = canvas.getBoundingClientRect();
+                
+                textLabels.forEach(label => {
+                    const pos = label.pos.clone();
+                    pos.project(camera);
+                    
+                    // 카메라 뒤로 넘어가면 라벨 숨기기
+                    if (pos.z > 1) {
+                        label.el.style.opacity = '0';
+                    } else {
+                        const x = (pos.x * 0.5 + 0.5) * rect.width;
+                        const y = (pos.y * -0.5 + 0.5) * rect.height;
+                        label.el.style.left = `${x}px`;
+                        label.el.style.top = `${y}px`;
+                        label.el.style.opacity = '1';
+                    }
+                });
+            }
         }
 
         window.onload = () => {
             initThree();
-            switchMode('normal');
+            updateFormulaVisibility(); // 초기 로드 시 토글 숨김 상태 반영
+            switchMode('surface'); 
             animate();
         };
     </script>
