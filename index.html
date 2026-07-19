@@ -20,12 +20,14 @@
         <h1 class="text-xl font-extrabold text-gray-800 mb-1">부피와 겉넓이 3D</h1>
         <p class="text-xs text-gray-500 mb-4">상자의 크기를 설정하고 부피와 겉넓이를 이해해 보세요.</p>
 
-        <!-- 모드 전환 (4가지 탭) -->
+        <!-- 모드 전환 -->
         <div class="flex flex-wrap gap-1.5 mb-5">
             <button id="mode-normal" class="flex-1 whitespace-nowrap bg-indigo-600 text-white font-bold py-2 px-2 rounded-lg text-xs shadow transition">기본 쌓기(cm³)</button>
             <button id="mode-single" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition">단위 변환</button>
             <button id="mode-meter" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition">1m³ 시각화</button>
             <button id="mode-surface" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition text-pink-600">겉넓이 구하기</button>
+            <button id="mode-challenge" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition text-teal-700">같은 부피 다른 겉넓이</button>
+            <button id="mode-stack" class="flex-1 whitespace-nowrap bg-gray-200 text-gray-700 font-bold py-2 px-2 rounded-lg text-xs hover:bg-gray-300 transition text-amber-700">상자 쌓기 시뮬레이션</button>
         </div>
 
         <!-- ========================================== -->
@@ -163,6 +165,152 @@
             </select>
         </div>
 
+        <!-- ========================================== -->
+        <!-- 5. 같은 부피 다른 겉넓이 챌린지 패널 -->
+        <!-- ========================================== -->
+        <div id="challenge-controls" class="hidden bg-teal-50 p-4 rounded-xl border border-teal-200 mb-4">
+            <h2 class="text-sm font-bold text-teal-800 mb-2">🎯 1. 도전할 부피 정하기</h2>
+            <div class="flex items-center gap-2 mb-2">
+                <label class="text-xs font-bold text-teal-700 shrink-0">부피</label>
+                <input type="number" id="challenge-volume" value="36" min="2" max="400" class="w-full border-2 border-teal-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-teal-500 focus:outline-none transition">
+                <span class="text-xs font-bold text-gray-500 shrink-0">cm³</span>
+            </div>
+            <button id="btn-challenge-volume" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-teal-700 transition text-sm mb-3">이 부피로 도전</button>
+            <div id="challenge-feedback-1" class="hidden rounded-lg px-3 py-2 text-xs font-bold mb-4"></div>
+
+            <h2 class="text-sm font-bold text-teal-800 mb-2">🏁 2. 목표 선택</h2>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button id="btn-challenge-min" class="bg-white border-2 border-teal-200 text-teal-700 font-bold py-2 rounded-lg hover:bg-teal-100 transition text-xs disabled:opacity-40 disabled:cursor-default" disabled>겉넓이 작게</button>
+                <button id="btn-challenge-max" class="bg-white border-2 border-rose-200 text-rose-600 font-bold py-2 rounded-lg hover:bg-rose-50 transition text-xs disabled:opacity-40 disabled:cursor-default" disabled>겉넓이 크게</button>
+            </div>
+
+            <h2 class="text-sm font-bold text-teal-800 mb-2">📦 3. 가로·세로·높이 만들기</h2>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-pink-600 mb-1 text-center">가로(cm)</label>
+                    <input type="number" id="challenge-w" value="3" min="1" max="30" class="w-full border-2 border-pink-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-pink-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-blue-600 mb-1 text-center">세로(cm)</label>
+                    <input type="number" id="challenge-d" value="3" min="1" max="30" class="w-full border-2 border-blue-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-blue-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-green-600 mb-1 text-center">높이(cm)</label>
+                    <input type="number" id="challenge-h" value="4" min="1" max="30" class="w-full border-2 border-green-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-green-500 focus:outline-none transition">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div class="bg-white border border-teal-100 rounded-lg p-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold">현재 부피</div>
+                    <div id="challenge-current-volume" class="text-base font-black text-teal-700">36cm³</div>
+                </div>
+                <div class="bg-white border border-teal-100 rounded-lg p-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold">목표 부피</div>
+                    <div id="challenge-target-volume" class="text-base font-black text-gray-700">-</div>
+                </div>
+                <div class="bg-white border border-teal-100 rounded-lg p-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold">겉넓이</div>
+                    <div id="challenge-surface-area" class="text-base font-black text-rose-600">66cm²</div>
+                </div>
+            </div>
+
+            <button id="btn-challenge-try" class="w-full bg-amber-500 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-amber-600 transition text-sm disabled:opacity-40 disabled:cursor-default mb-3" disabled>도전!</button>
+            <div id="challenge-feedback-3" class="hidden rounded-lg px-3 py-2 text-xs font-bold mb-3"></div>
+
+            <div id="challenge-log-wrap" class="hidden overflow-x-auto bg-white rounded-lg border border-teal-100">
+                <table class="w-full text-xs text-left">
+                    <thead class="text-gray-500">
+                        <tr>
+                            <th class="px-2 py-2 border-b border-teal-100">도전</th>
+                            <th class="px-2 py-2 border-b border-teal-100">가로×세로×높이</th>
+                            <th class="px-2 py-2 border-b border-teal-100">겉넓이</th>
+                            <th class="px-2 py-2 border-b border-teal-100">결과</th>
+                        </tr>
+                    </thead>
+                    <tbody id="challenge-log"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 6. 상자 쌓기 시뮬레이션 패널 -->
+        <!-- ========================================== -->
+        <div id="stack-controls" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-200 mb-4">
+            <h2 class="text-sm font-bold text-amber-800 mb-2">📦 1. 상자 한 개와 전체 개수</h2>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-pink-600 mb-1 text-center">가로(cm)</label>
+                    <input type="number" id="stack-box-w" value="8" min="1" max="20" class="w-full border-2 border-pink-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-pink-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-blue-600 mb-1 text-center">세로(cm)</label>
+                    <input type="number" id="stack-box-d" value="5" min="1" max="20" class="w-full border-2 border-blue-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-blue-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-green-600 mb-1 text-center">높이(cm)</label>
+                    <input type="number" id="stack-box-h" value="3" min="1" max="20" class="w-full border-2 border-green-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-green-500 focus:outline-none transition">
+                </div>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+                <label class="text-xs font-bold text-amber-700 shrink-0">총 상자 수</label>
+                <input type="number" id="stack-total" value="12" min="2" max="120" class="w-full border-2 border-amber-200 rounded-lg px-2 py-1.5 text-center font-bold focus:border-amber-500 focus:outline-none transition">
+                <span class="text-xs font-bold text-gray-500 shrink-0">개</span>
+            </div>
+            <div class="flex gap-2 mb-3">
+                <button id="btn-stack-setup" class="flex-1 bg-amber-500 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-amber-600 transition text-sm">이 상자로 시작</button>
+                <button id="btn-stack-reset-all" class="flex-1 bg-white border border-red-200 text-red-500 font-bold py-2.5 rounded-lg shadow-sm hover:bg-red-50 transition text-sm">처음부터</button>
+            </div>
+            <div id="stack-feedback-setup" class="hidden rounded-lg px-3 py-2 text-xs font-bold mb-4"></div>
+
+            <h2 class="text-sm font-bold text-amber-800 mb-2">🧱 2. 방향을 골라 쌓기</h2>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+                <button id="btn-stack-add-x" class="bg-white border-2 border-pink-200 text-pink-600 font-bold py-2 rounded-lg hover:bg-pink-50 transition text-xs disabled:opacity-40 disabled:cursor-default" disabled>가로 +1<br><span id="stack-cost-x" class="text-[10px] text-gray-500 font-semibold"></span></button>
+                <button id="btn-stack-add-y" class="bg-white border-2 border-blue-200 text-blue-600 font-bold py-2 rounded-lg hover:bg-blue-50 transition text-xs disabled:opacity-40 disabled:cursor-default" disabled>세로 +1<br><span id="stack-cost-y" class="text-[10px] text-gray-500 font-semibold"></span></button>
+                <button id="btn-stack-add-z" class="bg-white border-2 border-green-200 text-green-600 font-bold py-2 rounded-lg hover:bg-green-50 transition text-xs disabled:opacity-40 disabled:cursor-default" disabled>층 +1<br><span id="stack-cost-z" class="text-[10px] text-gray-500 font-semibold"></span></button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <button id="btn-stack-sub-x" class="text-[11px] text-pink-500 underline disabled:opacity-40" disabled>가로 1개 빼기</button>
+                <button id="btn-stack-sub-y" class="text-[11px] text-blue-500 underline disabled:opacity-40" disabled>세로 1개 빼기</button>
+                <button id="btn-stack-sub-z" class="text-[11px] text-green-500 underline disabled:opacity-40" disabled>1층 빼기</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <div class="bg-white border border-amber-100 rounded-lg p-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold">배열</div>
+                    <div id="stack-arr" class="text-base font-black text-amber-700">1×1×1</div>
+                </div>
+                <div id="stack-left-card" class="bg-white border border-amber-100 rounded-lg p-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold">남은 상자</div>
+                    <div id="stack-left" class="text-base font-black text-amber-600">-</div>
+                </div>
+                <div class="bg-white border border-amber-100 rounded-lg p-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold">부피</div>
+                    <div id="stack-volume" class="text-base font-black text-teal-700">-</div>
+                </div>
+                <div class="bg-white border border-amber-100 rounded-lg p-2 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold">겉넓이</div>
+                    <div id="stack-surface-area" class="text-base font-black text-rose-600">-</div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-3">
+                <button id="btn-stack-save" class="flex-1 bg-emerald-600 text-white font-bold py-2.5 rounded-lg shadow-sm hover:bg-emerald-700 transition text-sm disabled:opacity-40 disabled:cursor-default" disabled>구조 저장</button>
+                <button id="btn-stack-reset" class="flex-1 bg-white border border-amber-300 text-amber-700 font-bold py-2.5 rounded-lg shadow-sm hover:bg-amber-100 transition text-sm disabled:opacity-40 disabled:cursor-default" disabled>다시 쌓기</button>
+            </div>
+            <div id="stack-feedback-build" class="hidden rounded-lg px-3 py-2 text-xs font-bold mb-3"></div>
+
+            <div class="bg-white border border-amber-100 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-black text-amber-800">저장된 구조 비교</h3>
+                    <span class="text-[10px] text-gray-500 font-bold">겉넓이 최소 표시</span>
+                </div>
+                <div id="stack-saved-list" class="space-y-2 text-xs text-gray-600">
+                    아직 저장된 구조가 없어요.
+                </div>
+            </div>
+        </div>
+
         <div class="flex-grow"></div>
 
         <!-- ========================================== -->
@@ -253,6 +401,20 @@
         let surfaceGroup = null;
         let surfaceView = 'solid'; // 'solid' or 'net'
         let textLabels = [];
+
+        // 같은 부피 다른 겉넓이 챌린지
+        let challengeGroup = null;
+        let challengeState = { target: 0, goalMode: null, tries: 0, optimal: null };
+
+        // 상자 쌓기 시뮬레이션
+        let stackGroup = null;
+        let stackState = {
+            box: { w: 8, d: 5, h: 3 },
+            total: 12,
+            count: { x: 1, y: 1, z: 1 },
+            started: false,
+            saved: []
+        };
 
         // 공식 보이기 상태
         let isFormulaVisible = false;
@@ -419,6 +581,38 @@
                 });
                 scene.remove(surfaceGroup);
                 surfaceGroup = null;
+            }
+
+            if (challengeGroup) {
+                challengeGroup.children.forEach(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                    child.children.forEach(grandChild => {
+                        if (grandChild.geometry) grandChild.geometry.dispose();
+                        if (grandChild.material) grandChild.material.dispose();
+                    });
+                });
+                scene.remove(challengeGroup);
+                challengeGroup = null;
+            }
+
+            if (stackGroup) {
+                stackGroup.children.forEach(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                    child.children.forEach(grandChild => {
+                        if (grandChild.geometry) grandChild.geometry.dispose();
+                        if (grandChild.material) grandChild.material.dispose();
+                    });
+                });
+                scene.remove(stackGroup);
+                stackGroup = null;
             }
             
             document.getElementById('val-x').textContent = '';
@@ -874,17 +1068,447 @@
         }
 
         // ==========================================
+        // 5. 같은 부피 다른 겉넓이 챌린지
+        // ==========================================
+        const volumeOf = (w, d, h) => w * d * h;
+        const surfaceAreaOf = (w, d, h) => 2 * (w * d + w * h + d * h);
+
+        function getChallengeOptimal(volume) {
+            let minArea = Infinity;
+            let maxArea = -Infinity;
+            for (let w = 1; w <= volume; w++) {
+                if (volume % w !== 0) continue;
+                for (let d = w; d <= volume / w; d++) {
+                    if ((volume / w) % d !== 0) continue;
+                    const h = volume / (w * d);
+                    if (h < d) continue;
+                    const area = surfaceAreaOf(w, d, h);
+                    minArea = Math.min(minArea, area);
+                    maxArea = Math.max(maxArea, area);
+                }
+            }
+            return { minArea, maxArea };
+        }
+
+        function setChallengeFeedback(id, type, text) {
+            const el = document.getElementById(id);
+            const classes = {
+                ok: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+                no: 'bg-rose-100 text-rose-700 border border-rose-200',
+                mid: 'bg-amber-100 text-amber-700 border border-amber-200'
+            };
+            el.className = `rounded-lg px-3 py-2 text-xs font-bold mb-${id.endsWith('1') ? '4' : '3'} ${classes[type] || classes.mid}`;
+            el.textContent = text;
+        }
+
+        function clampChallengeInput(id) {
+            const input = document.getElementById(id);
+            let value = parseInt(input.value) || 1;
+            value = Math.max(1, Math.min(30, value));
+            input.value = value;
+            return value;
+        }
+
+        function setChallengeVolume() {
+            const input = document.getElementById('challenge-volume');
+            const target = parseInt(input.value);
+            if (!target || target < 2 || target > 400) {
+                setChallengeFeedback('challenge-feedback-1', 'no', '2~400 사이의 자연수를 입력해 주세요.');
+                return;
+            }
+
+            challengeState = {
+                target,
+                goalMode: null,
+                tries: 0,
+                optimal: getChallengeOptimal(target)
+            };
+            document.getElementById('challenge-target-volume').textContent = `${target}cm³`;
+            document.getElementById('btn-challenge-min').disabled = false;
+            document.getElementById('btn-challenge-max').disabled = false;
+            document.getElementById('btn-challenge-try').disabled = true;
+            document.getElementById('btn-challenge-min').classList.remove('bg-teal-600', 'text-white');
+            document.getElementById('btn-challenge-max').classList.remove('bg-rose-500', 'text-white');
+            document.getElementById('challenge-log').innerHTML = '';
+            document.getElementById('challenge-log-wrap').classList.add('hidden');
+            document.getElementById('challenge-feedback-3').classList.add('hidden');
+            setChallengeFeedback('challenge-feedback-1', 'ok', `목표 부피 ${target}cm³ 확정! 겉넓이를 작게 또는 크게 만드는 목표를 골라 보세요.`);
+            initChallengeBox();
+        }
+
+        function setChallengeGoal(mode) {
+            if (!challengeState.target) return;
+            challengeState.goalMode = mode;
+            document.getElementById('btn-challenge-try').disabled = false;
+            document.getElementById('btn-challenge-min').classList.toggle('bg-teal-600', mode === 'min');
+            document.getElementById('btn-challenge-min').classList.toggle('text-white', mode === 'min');
+            document.getElementById('btn-challenge-max').classList.toggle('bg-rose-500', mode === 'max');
+            document.getElementById('btn-challenge-max').classList.toggle('text-white', mode === 'max');
+            document.getElementById('challenge-feedback-3').classList.add('hidden');
+        }
+
+        function initChallengeBox() {
+            clearScene();
+            const w = clampChallengeInput('challenge-w');
+            const d = clampChallengeInput('challenge-d');
+            const h = clampChallengeInput('challenge-h');
+            const volume = volumeOf(w, d, h);
+            const area = surfaceAreaOf(w, d, h);
+            const targetText = challengeState.target ? `${challengeState.target}cm³` : '-';
+
+            document.getElementById('challenge-current-volume').textContent = `${volume.toLocaleString()}cm³`;
+            document.getElementById('challenge-target-volume').textContent = targetText;
+            document.getElementById('challenge-surface-area').textContent = `${area.toLocaleString()}cm²`;
+
+            document.getElementById('formula-title').textContent = '부피 확인하기 (cm³)';
+            document.getElementById('val-x').textContent = w;
+            document.getElementById('val-z').textContent = d;
+            document.getElementById('val-y').textContent = h;
+            document.getElementById('val-total').textContent = volume.toLocaleString();
+            document.getElementById('val-unit').textContent = '(cm³)';
+
+            challengeGroup = new THREE.Group();
+            const totalBlocks = volume;
+            const showUnitBlocks = totalBlocks <= 3000;
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.18 });
+
+            if (showUnitBlocks) {
+                const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+                const edgeGeo = new THREE.EdgesGeometry(boxGeo);
+                const offsetX = -(w - 1) / 2;
+                const offsetY = -(h - 1) / 2;
+                const offsetZ = -(d - 1) / 2;
+                for (let y = 0; y < h; y++) {
+                    for (let z = 0; z < d; z++) {
+                        for (let x = 0; x < w; x++) {
+                            const mats = [
+                                new THREE.MeshLambertMaterial({ color: colorGreen }),
+                                new THREE.MeshLambertMaterial({ color: colorPurple }),
+                                new THREE.MeshLambertMaterial({ color: colorOrange }),
+                                new THREE.MeshLambertMaterial({ color: colorPink }),
+                                new THREE.MeshLambertMaterial({ color: colorBlue }),
+                                new THREE.MeshLambertMaterial({ color: colorTeal })
+                            ];
+                            const cube = new THREE.Mesh(boxGeo, mats);
+                            cube.position.set(x + offsetX, y - (h - 1) / 2, (d - 1 - z) + offsetZ);
+                            cube.add(new THREE.LineSegments(edgeGeo, edgeMat));
+                            challengeGroup.add(cube);
+                        }
+                    }
+                }
+            } else {
+                const boxGeo = new THREE.BoxGeometry(w, h, d);
+                const mesh = new THREE.Mesh(boxGeo, [
+                    new THREE.MeshLambertMaterial({ color: colorGreen }),
+                    new THREE.MeshLambertMaterial({ color: colorPurple }),
+                    new THREE.MeshLambertMaterial({ color: colorOrange }),
+                    new THREE.MeshLambertMaterial({ color: colorPink }),
+                    new THREE.MeshLambertMaterial({ color: colorBlue }),
+                    new THREE.MeshLambertMaterial({ color: colorTeal })
+                ]);
+                mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(boxGeo), edgeMat));
+                challengeGroup.add(mesh);
+            }
+
+            scene.add(challengeGroup);
+            const maxDim = Math.max(w, d, h);
+            camera.position.set(maxDim * 1.6, maxDim * 1.25, maxDim * 2.1);
+            controls.target.set(0, 0, 0);
+
+            addLabel(new THREE.Vector3(0, -h / 2 - 0.7, d / 2 + 0.6), `가로 ${w}`, 'pink');
+            addLabel(new THREE.Vector3(w / 2 + 0.7, -h / 2 - 0.7, 0), `세로 ${d}`, 'blue');
+            addLabel(new THREE.Vector3(w / 2 + 0.7, 0, d / 2 + 0.6), `높이 ${h}`, 'green');
+            updateFormulaVisibility();
+        }
+
+        function tryChallengeBox() {
+            if (!challengeState.target || !challengeState.goalMode) return;
+            const w = clampChallengeInput('challenge-w');
+            const d = clampChallengeInput('challenge-d');
+            const h = clampChallengeInput('challenge-h');
+            const volume = volumeOf(w, d, h);
+            const area = surfaceAreaOf(w, d, h);
+
+            if (volume !== challengeState.target) {
+                setChallengeFeedback('challenge-feedback-3', 'no', `지금 부피는 ${volume}cm³예요. 목표 부피 ${challengeState.target}cm³에 맞춰 보세요.`);
+                return;
+            }
+
+            challengeState.tries += 1;
+            const goal = challengeState.goalMode === 'min' ? challengeState.optimal.minArea : challengeState.optimal.maxArea;
+            const isBest = area === goal;
+            const directionText = challengeState.goalMode === 'min' ? '작은' : '큰';
+            const result = isBest ? '최고 기록' : `${directionText} 겉넓이 가능`;
+
+            if (isBest) {
+                setChallengeFeedback('challenge-feedback-3', 'ok', `완벽해요! ${w}×${d}×${h}의 겉넓이 ${area}cm²는 이 부피에서 가장 ${directionText} 값이에요.`);
+            } else {
+                setChallengeFeedback('challenge-feedback-3', 'mid', `부피는 성공! 겉넓이는 ${area}cm²예요. 목표 기록 ${goal}cm²까지 ${Math.abs(area - goal)}cm² 차이예요.`);
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="px-2 py-2 border-b border-teal-100">${challengeState.tries}</td>
+                <td class="px-2 py-2 border-b border-teal-100">${w}×${d}×${h}</td>
+                <td class="px-2 py-2 border-b border-teal-100">${area}cm²</td>
+                <td class="px-2 py-2 border-b border-teal-100">${result}</td>
+            `;
+            document.getElementById('challenge-log').appendChild(row);
+            document.getElementById('challenge-log-wrap').classList.remove('hidden');
+        }
+
+        // ==========================================
+        // 6. 상자 쌓기 시뮬레이션
+        // ==========================================
+        function clampStackInput(id, min, max) {
+            const input = document.getElementById(id);
+            let value = parseInt(input.value) || min;
+            value = Math.max(min, Math.min(max, value));
+            input.value = value;
+            return value;
+        }
+
+        function setStackFeedback(id, type, text) {
+            const el = document.getElementById(id);
+            const classes = {
+                ok: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+                no: 'bg-rose-100 text-rose-700 border border-rose-200',
+                mid: 'bg-amber-100 text-amber-700 border border-amber-200'
+            };
+            el.className = `rounded-lg px-3 py-2 text-xs font-bold ${id.endsWith('setup') ? 'mb-4' : 'mb-3'} ${classes[type] || classes.mid}`;
+            el.textContent = text;
+        }
+
+        function stackUsed() {
+            return stackState.count.x * stackState.count.y * stackState.count.z;
+        }
+
+        function stackCost(axis) {
+            const { x, y, z } = stackState.count;
+            if (axis === 'x') return y * z;
+            if (axis === 'y') return x * z;
+            return x * y;
+        }
+
+        function stackOuterDims() {
+            const { w, d, h } = stackState.box;
+            const { x, y, z } = stackState.count;
+            return { w: x * w, d: y * d, h: z * h };
+        }
+
+        function stackVolume() {
+            const dims = stackOuterDims();
+            return dims.w * dims.d * dims.h;
+        }
+
+        function stackSurfaceArea() {
+            const dims = stackOuterDims();
+            return surfaceAreaOf(dims.w, dims.d, dims.h);
+        }
+
+        function setStackControlsEnabled(enabled) {
+            ['btn-stack-add-x', 'btn-stack-add-y', 'btn-stack-add-z', 'btn-stack-sub-x', 'btn-stack-sub-y', 'btn-stack-sub-z', 'btn-stack-reset'].forEach(id => {
+                document.getElementById(id).disabled = !enabled;
+            });
+        }
+
+        function setupStackSimulation() {
+            const w = clampStackInput('stack-box-w', 1, 20);
+            const d = clampStackInput('stack-box-d', 1, 20);
+            const h = clampStackInput('stack-box-h', 1, 20);
+            const total = clampStackInput('stack-total', 2, 120);
+
+            stackState = {
+                box: { w, d, h },
+                total,
+                count: { x: 1, y: 1, z: 1 },
+                started: true,
+                saved: []
+            };
+
+            ['stack-box-w', 'stack-box-d', 'stack-box-h', 'stack-total'].forEach(id => document.getElementById(id).disabled = true);
+            document.getElementById('btn-stack-setup').disabled = true;
+            setStackControlsEnabled(true);
+            setStackFeedback('stack-feedback-setup', 'ok', `${w}×${d}×${h}cm 상자 ${total}개로 시작했어요. 방향을 골라 쌓아 보세요.`);
+            document.getElementById('stack-feedback-build').classList.add('hidden');
+            renderStackSaved();
+            initStackScene();
+        }
+
+        function resetStackSimulation() {
+            stackState.count = { x: 1, y: 1, z: 1 };
+            document.getElementById('stack-feedback-build').classList.add('hidden');
+            initStackScene();
+        }
+
+        function resetStackAll() {
+            stackState = {
+                box: { w: 8, d: 5, h: 3 },
+                total: 12,
+                count: { x: 1, y: 1, z: 1 },
+                started: false,
+                saved: []
+            };
+            ['stack-box-w', 'stack-box-d', 'stack-box-h', 'stack-total'].forEach(id => document.getElementById(id).disabled = false);
+            document.getElementById('btn-stack-setup').disabled = false;
+            document.getElementById('stack-feedback-setup').classList.add('hidden');
+            document.getElementById('stack-feedback-build').classList.add('hidden');
+            setStackControlsEnabled(false);
+            renderStackSaved();
+            initStackScene();
+        }
+
+        function addStackBox(axis) {
+            if (!stackState.started) return;
+            if (stackUsed() + stackCost(axis) > stackState.total) return;
+            stackState.count[axis] += 1;
+            initStackScene();
+        }
+
+        function removeStackBox(axis) {
+            if (!stackState.started || stackState.count[axis] <= 1) return;
+            stackState.count[axis] -= 1;
+            initStackScene();
+        }
+
+        function initStackScene() {
+            clearScene();
+
+            const { w, d, h } = stackState.box;
+            const { x, y, z } = stackState.count;
+            const used = stackUsed();
+            const left = stackState.total - used;
+            const dims = stackOuterDims();
+            const volume = stackVolume();
+            const area = stackSurfaceArea();
+
+            document.getElementById('stack-arr').textContent = `${x}×${y}×${z}`;
+            document.getElementById('stack-left').textContent = stackState.started ? `${left}개` : '-';
+            document.getElementById('stack-volume').textContent = `${volume.toLocaleString()}cm³`;
+            document.getElementById('stack-surface-area').textContent = `${area.toLocaleString()}cm²`;
+            document.getElementById('stack-left-card').classList.toggle('bg-emerald-50', stackState.started && left === 0);
+            document.getElementById('btn-stack-save').disabled = !stackState.started || left !== 0;
+
+            [['x', 'stack-cost-x'], ['y', 'stack-cost-y'], ['z', 'stack-cost-z']].forEach(([axis, id]) => {
+                const cost = stackCost(axis);
+                document.getElementById(id).textContent = `상자 ${cost}개`;
+                document.getElementById(`btn-stack-add-${axis}`).disabled = !stackState.started || used + cost > stackState.total;
+                document.getElementById(`btn-stack-sub-${axis}`).disabled = !stackState.started || stackState.count[axis] <= 1;
+            });
+
+            document.getElementById('formula-title').textContent = '쌓은 상자의 전체 부피 (cm³)';
+            document.getElementById('val-x').textContent = dims.w;
+            document.getElementById('val-z').textContent = dims.d;
+            document.getElementById('val-y').textContent = dims.h;
+            document.getElementById('val-total').textContent = volume.toLocaleString();
+            document.getElementById('val-unit').textContent = '(cm³)';
+
+            stackGroup = new THREE.Group();
+            const boxGeo = new THREE.BoxGeometry(w, h, d);
+            const edgeGeo = new THREE.EdgesGeometry(boxGeo);
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x1f2937, transparent: true, opacity: 0.28 });
+            const offsetX = -((x - 1) * w) / 2;
+            const offsetY = -((z - 1) * h) / 2;
+            const offsetZ = -((y - 1) * d) / 2;
+
+            for (let layer = 0; layer < z; layer++) {
+                for (let row = 0; row < y; row++) {
+                    for (let col = 0; col < x; col++) {
+                        const mats = [
+                            new THREE.MeshLambertMaterial({ color: 0xf59e0b }),
+                            new THREE.MeshLambertMaterial({ color: 0xfbbf24 }),
+                            new THREE.MeshLambertMaterial({ color: colorOrange }),
+                            new THREE.MeshLambertMaterial({ color: colorPink }),
+                            new THREE.MeshLambertMaterial({ color: colorBlue }),
+                            new THREE.MeshLambertMaterial({ color: colorTeal })
+                        ];
+                        const box = new THREE.Mesh(boxGeo, mats);
+                        box.position.set(offsetX + col * w, offsetY + layer * h, offsetZ + (y - 1 - row) * d);
+                        box.add(new THREE.LineSegments(edgeGeo, edgeMat));
+                        stackGroup.add(box);
+                    }
+                }
+            }
+
+            scene.add(stackGroup);
+            const maxDim = Math.max(dims.w, dims.d, dims.h);
+            camera.position.set(maxDim * 1.45, maxDim * 1.15, maxDim * 1.9);
+            controls.target.set(0, 0, 0);
+
+            addLabel(new THREE.Vector3(0, -dims.h / 2 - h * 0.35, dims.d / 2 + d * 0.35), `전체 가로 ${dims.w}`, 'pink');
+            addLabel(new THREE.Vector3(dims.w / 2 + w * 0.35, -dims.h / 2 - h * 0.35, 0), `전체 세로 ${dims.d}`, 'blue');
+            addLabel(new THREE.Vector3(dims.w / 2 + w * 0.35, 0, dims.d / 2 + d * 0.35), `전체 높이 ${dims.h}`, 'green');
+            updateFormulaVisibility();
+        }
+
+        function saveStackStructure() {
+            if (!stackState.started || stackState.total - stackUsed() !== 0) return;
+            const { x, y, z } = stackState.count;
+            const key = `${x}×${y}×${z}`;
+            if (stackState.saved.some(item => item.key === key)) {
+                setStackFeedback('stack-feedback-build', 'no', '이미 저장한 구조예요. 다른 방향으로 다시 쌓아 보세요.');
+                return;
+            }
+
+            const dims = stackOuterDims();
+            const area = stackSurfaceArea();
+            stackState.saved.push({ key, dims, volume: stackVolume(), area });
+            setStackFeedback('stack-feedback-build', 'ok', `${key} 구조를 저장했어요. 겉넓이는 ${area.toLocaleString()}cm²입니다.`);
+            renderStackSaved();
+        }
+
+        function renderStackSaved() {
+            const list = document.getElementById('stack-saved-list');
+            if (!stackState.saved.length) {
+                list.innerHTML = '아직 저장된 구조가 없어요.';
+                return;
+            }
+
+            const minArea = Math.min(...stackState.saved.map(item => item.area));
+            list.innerHTML = stackState.saved.map((item, index) => {
+                const isBest = item.area === minArea && stackState.saved.length > 1;
+                const badge = isBest ? '<span class="bg-amber-400 text-white text-[10px] font-black px-2 py-0.5 rounded-full">최소</span>' : '';
+                return `
+                    <div class="border ${isBest ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-white'} rounded-lg p-2">
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="font-black text-gray-800">${item.key} 배열</span>
+                            ${badge}
+                        </div>
+                        <div class="text-gray-500">전체 ${item.dims.w}×${item.dims.d}×${item.dims.h}cm</div>
+                        <div class="font-bold text-gray-700">부피 ${item.volume.toLocaleString()}cm³ · 겉넓이 ${item.area.toLocaleString()}cm²</div>
+                        <button class="text-[11px] text-gray-400 underline mt-1" data-stack-delete="${index}">삭제</button>
+                    </div>
+                `;
+            }).join('');
+
+            list.querySelectorAll('[data-stack-delete]').forEach(button => {
+                button.addEventListener('click', () => {
+                    stackState.saved.splice(parseInt(button.dataset.stackDelete), 1);
+                    renderStackSaved();
+                });
+            });
+        }
+
+        // ==========================================
         // 이벤트 바인딩
         // ==========================================
         function switchMode(mode) {
             currentMode = mode;
-            ['normal', 'single', 'meter', 'surface'].forEach(m => {
+            ['normal', 'single', 'meter', 'surface', 'challenge', 'stack'].forEach(m => {
                 const btn = document.getElementById(`mode-${m}`);
                 const panel = document.getElementById(`${m}-controls`);
                 if (m === mode) {
                     if(m === 'surface') {
                         btn.classList.replace('bg-gray-200', 'bg-pink-600');
                         btn.classList.replace('text-pink-600', 'text-white');
+                        btn.classList.replace('text-gray-700', 'text-white');
+                    } else if(m === 'challenge') {
+                        btn.classList.replace('bg-gray-200', 'bg-teal-600');
+                        btn.classList.replace('text-teal-700', 'text-white');
+                        btn.classList.replace('text-gray-700', 'text-white');
+                    } else if(m === 'stack') {
+                        btn.classList.replace('bg-gray-200', 'bg-amber-500');
+                        btn.classList.replace('text-amber-700', 'text-white');
                         btn.classList.replace('text-gray-700', 'text-white');
                     } else {
                         btn.classList.replace('bg-gray-200', 'bg-indigo-600');
@@ -896,6 +1520,14 @@
                         btn.classList.replace('bg-pink-600', 'bg-gray-200');
                         btn.classList.replace('text-white', 'text-gray-700');
                         btn.classList.add('text-pink-600');
+                    } else if(m === 'challenge') {
+                        btn.classList.replace('bg-teal-600', 'bg-gray-200');
+                        btn.classList.replace('text-white', 'text-gray-700');
+                        btn.classList.add('text-teal-700');
+                    } else if(m === 'stack') {
+                        btn.classList.replace('bg-amber-500', 'bg-gray-200');
+                        btn.classList.replace('text-white', 'text-gray-700');
+                        btn.classList.add('text-amber-700');
                     } else {
                         btn.classList.replace('bg-indigo-600', 'bg-gray-200');
                         btn.classList.replace('text-white', 'text-gray-700');
@@ -916,6 +1548,8 @@
             else if (mode === 'single') initSingleBox();
             else if (mode === 'meter') initMeterBox();
             else if (mode === 'surface') initSurfaceBox();
+            else if (mode === 'challenge') initChallengeBox();
+            else if (mode === 'stack') initStackScene();
             
             // 모드가 변경되면 토글 가시성 동기화도 한 번 더 실행
             updateFormulaVisibility();
@@ -925,6 +1559,8 @@
         document.getElementById('mode-single').addEventListener('click', () => switchMode('single'));
         document.getElementById('mode-meter').addEventListener('click', () => switchMode('meter'));
         document.getElementById('mode-surface').addEventListener('click', () => switchMode('surface'));
+        document.getElementById('mode-challenge').addEventListener('click', () => switchMode('challenge'));
+        document.getElementById('mode-stack').addEventListener('click', () => switchMode('stack'));
 
         // 기본 모드 컨트롤
         document.getElementById('btn-create').addEventListener('click', () => {
@@ -980,6 +1616,27 @@
             solidBtn.classList.replace('bg-pink-600', 'bg-white'); solidBtn.classList.replace('text-white', 'text-pink-600'); solidBtn.classList.add('border', 'border-pink-300');
             initSurfaceBox();
         });
+
+        // 같은 부피 다른 겉넓이 컨트롤
+        document.getElementById('btn-challenge-volume').addEventListener('click', setChallengeVolume);
+        document.getElementById('btn-challenge-min').addEventListener('click', () => setChallengeGoal('min'));
+        document.getElementById('btn-challenge-max').addEventListener('click', () => setChallengeGoal('max'));
+        document.getElementById('btn-challenge-try').addEventListener('click', tryChallengeBox);
+        ['challenge-w', 'challenge-d', 'challenge-h'].forEach(id => {
+            document.getElementById(id).addEventListener('change', initChallengeBox);
+        });
+
+        // 상자 쌓기 시뮬레이션 컨트롤
+        document.getElementById('btn-stack-setup').addEventListener('click', setupStackSimulation);
+        document.getElementById('btn-stack-reset-all').addEventListener('click', resetStackAll);
+        document.getElementById('btn-stack-reset').addEventListener('click', resetStackSimulation);
+        document.getElementById('btn-stack-save').addEventListener('click', saveStackStructure);
+        document.getElementById('btn-stack-add-x').addEventListener('click', () => addStackBox('x'));
+        document.getElementById('btn-stack-add-y').addEventListener('click', () => addStackBox('y'));
+        document.getElementById('btn-stack-add-z').addEventListener('click', () => addStackBox('z'));
+        document.getElementById('btn-stack-sub-x').addEventListener('click', () => removeStackBox('x'));
+        document.getElementById('btn-stack-sub-y').addEventListener('click', () => removeStackBox('y'));
+        document.getElementById('btn-stack-sub-z').addEventListener('click', () => removeStackBox('z'));
 
         function animate() {
             requestAnimationFrame(animate);
